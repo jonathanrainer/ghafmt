@@ -5,12 +5,14 @@ use predicates::prelude::PredicateBooleanExt;
 use rstest::rstest;
 use tempfile::TempDir;
 
+#[allow(clippy::expect_used)]
 fn cmd() -> Command {
     Command::cargo_bin("ghafmt").expect("ghafmt binary not found")
 }
 
 /// Copy a fixture file into a temporary directory and return the dir + new path.
 /// The `TempDir` must be kept alive for the duration of the test.
+#[allow(clippy::expect_used)]
 fn copy_fixture(fixture: &str) -> (TempDir, PathBuf) {
     let dir = tempfile::tempdir().expect("tempdir");
     let filename = PathBuf::from(fixture)
@@ -116,7 +118,7 @@ fn write_mode(#[case] inputs_and_outputs: Vec<(&str, &str)>, #[case] expect_succ
         if expect_success {
             assertion.success();
             assert_eq!(
-                std::fs::read_to_string(&output).unwrap(),
+                std::fs::read_to_string(output).unwrap(),
                 std::fs::read_to_string(&path).unwrap()
             );
         } else {
