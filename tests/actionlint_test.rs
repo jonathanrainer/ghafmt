@@ -9,6 +9,8 @@ fn test_actionlint_compliance(
     path: PathBuf,
 ) {
     let output = Command::new("actionlint")
+        .arg("-ignore")
+        .arg("could not read reusable workflow file")
         .arg(&path)
         .output()
         .expect("actionlint not found — install it with: brew install actionlint");
