@@ -1,0 +1,60 @@
+# Top-level comment about the workflow
+name: Full of Comments # inline name comment
+
+on: [pull_request, push] # array inline comment
+
+# trigger comment above jobs
+jobs:
+  build: # job-level comment
+    # comment above runs-on
+    runs-on: ubuntu-latest
+    # environment variables at job level
+    env:
+      DEBUG: "true" # inline env comment
+      NODE_ENV: production # another inline env comment
+    steps: # steps-level comment
+      - name: Checkout code # inline step comment
+        uses: actions/checkout@v4 # action version inline
+        # comment below uses
+        with:
+          fetch-depth: 0 # with comment
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          cache: 'npm'
+          node-version: |
+            16
+            18 # tricky multiline comment
+
+      - name: Install dependencies
+        run: |
+          npm ci # install comment
+          npm run build # build comment
+        env:
+          CUSTOM_ENV: "value" # nested env comment
+        # comment after step block
+
+      - name: Test
+        if: success() # conditional inline comment
+        run: npm test
+        # awkward comment after conditional
+
+      - name: Lint
+        run: |
+          eslint . # lint comment
+        # trailing comment after step
+
+  deploy: # job with awkward spacing
+    needs: [build] # array inline comment
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to staging
+        run: |
+          echo "Deploying..." # inline deploy comment
+        env:
+          DEPLOY_ENV: staging # inline env comment
+          SECRET_KEY: ${{ secrets.DEPLOY_KEY }} # complex interpolation
+        # comment after env
+
+# bottom-of-file comment

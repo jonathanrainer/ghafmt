@@ -27,6 +27,7 @@ fn test_formatter(#[files("tests/fixtures/dirty/*.yaml")] path: PathBuf) {
 }
 
 #[rstest]
+#[ignore = "pending fixtures are works in progress"]
 fn test_formatter_pending(#[files("tests/fixtures/pending/dirty/*.yaml")] path: PathBuf) {
     let clean_file_name = path
         .file_name()

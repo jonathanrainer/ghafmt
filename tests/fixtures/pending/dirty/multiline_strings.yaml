@@ -1,0 +1,32 @@
+name: Multiline Strings
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Literal block
+        run: |
+          echo "line 1"
+          echo "line 2"
+          echo "line 3"
+      - name: Literal strip
+        run: |-
+          echo "no trailing newline"
+          echo "at the end"
+      - name: Literal keep
+        run: |+
+          echo "keeps trailing newlines"
+          echo "including extras"
+
+      - name: Folded block
+        run: >
+          this is a long line
+          that will be folded
+          into a single line
+      - name: Folded strip
+        run: >-
+          folded and
+          stripped
+      - name: Double-quoted with escapes
+        run: printf "hello\nworld"
+        if: "contains(github.event.head_commit.message, '[skip ci]') == false"

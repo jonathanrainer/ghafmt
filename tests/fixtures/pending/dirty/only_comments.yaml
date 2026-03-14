@@ -1,0 +1,13 @@
+# comment at very top
+#
+# comment after blank comment line
+name: Only Comments # every
+on: push # single
+# line has
+jobs: # a comment
+  # even here
+  build: # and here
+    runs-on: ubuntu-latest # and here
+    steps: # and here too
+      - run: echo "hi" # yes, here as well
+# and at the very bottom

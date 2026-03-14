@@ -1,0 +1,17 @@
+# workflow comment
+jobs:
+  test:
+    # job steps comment
+    steps:
+      # step comment
+      - run: npm test # inline on run
+        name: Test # inline on name
+        if: always() # inline on if
+    # runs-on comment
+    runs-on: ubuntu-latest
+    env:
+      CI: "true" # env comment
+# trigger comment
+on: push
+# name comment
+name: Comments Survive Reorder

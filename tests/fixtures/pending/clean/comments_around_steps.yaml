@@ -1,0 +1,21 @@
+name: Comments Around Steps
+
+on: push
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # comment before first step
+      - name: First
+        run: echo "first"
+
+      # comment between steps
+      - name: Second
+        run: echo "second"
+
+      # another comment between steps
+      # with two lines
+      - name: Third
+        run: echo "third"
+        # trailing comment on last step

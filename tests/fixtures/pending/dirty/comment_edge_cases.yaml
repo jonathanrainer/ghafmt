@@ -1,0 +1,24 @@
+name: Comment Edge Cases
+on:
+  push:
+    branches:
+      # comment before a sequence item
+      - main
+      # comment between sequence items
+      - develop
+      # comment after last sequence item
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      # comment before first env var
+      A: "1"
+      # comment between env vars
+      B: "2"
+      # comment after last env var
+    steps:
+      - name: Test
+        uses: actions/checkout@v4
+        with:
+          # comment inside with block
+          fetch-depth: 0

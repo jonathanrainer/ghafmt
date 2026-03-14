@@ -1,0 +1,101 @@
+name: Variable Substitutions
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        type: choice
+        description: Deploy target
+        options:
+          - staging
+          - production
+      log-level:
+        type: string
+        default: info
+      dry-run:
+        type: boolean
+        default: false
+  push:
+    branches: [main]
+jobs:
+  setup:
+    outputs:
+      version: ${{steps.meta.outputs.version}}
+      sha-short: ${{steps.meta.outputs.sha-short }}
+    runs-on: ubuntu-latest
+    steps:
+      - id: meta
+        run: |
+          echo "version=$(cat VERSION)" >> "$GITHUB_OUTPUT"
+          echo "sha-short=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+        name: Extract metadata
+      - uses: actions/checkout@v4
+  build:
+    runs-on: ubuntu-latest
+    needs: setup
+    env:
+      VERSION: ${{needs.setup.outputs.version }}
+      IMAGE_TAG: ${{ needs.setup.outputs.sha-short}}
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          echo "Building version ${{needs.setup.outputs.version}}"
+          echo "Commit: ${{needs.setup.outputs.sha-short }}"
+          docker build \
+            --build-arg VERSION=${{env.VERSION}} \
+            --label "org.opencontainers.image.revision=${{github.sha}}" \
+            -t myapp:${{env.IMAGE_TAG}} .
+        name: Build image
+      - if: ${{!inputs.dry-run && github.event_name == 'workflow_dispatch'}}
+        run: echo "${{secrets.REGISTRY_PASSWORD}}" | docker login -u "${{secrets.REGISTRY_USER}}" --password-stdin
+        name: Login to registry
+      - env:
+          FULL_TAG: ${{vars.REGISTRY_URL}}/${{github.repository}}:${{env.IMAGE_TAG}}
+        run: |
+          docker tag myapp:${{env.IMAGE_TAG}} ${{env.FULL_TAG}}
+          docker push ${{env.FULL_TAG}}
+        name: Push image
+        if: ${{!inputs.dry-run}}
+  deploy:
+    needs: [setup, build]
+    if: ${{always() && !cancelled() && needs.build.result == 'success'}}
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{inputs.environment || 'staging'}}
+      url: ${{steps.deploy.outputs.app-url}}
+    concurrency:
+      group: deploy-${{inputs.environment || 'staging'}}-${{github.ref}}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy ${{needs.setup.outputs.version}} to ${{inputs.environment || 'staging'}}
+        id: deploy
+        run: |
+          ./deploy.sh \
+            --env "${{inputs.environment || 'staging'}}" \
+            --version "${{needs.setup.outputs.version}}" \
+            --commit "${{needs.setup.outputs.sha-short}}" \
+            --log-level "${{inputs.log-level || 'info'}}"
+          echo "app-url=https://${{inputs.environment || 'staging'}}.example.com" >> "$GITHUB_OUTPUT"
+        env:
+          DEPLOY_TOKEN: ${{secrets.DEPLOY_TOKEN}}
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          APP_VERSION: ${{needs.setup.outputs.version}}
+      - name: Post status
+        if: ${{always()}}
+        uses: slackapi/slack-github-action@v1
+        env:
+          SLACK_WEBHOOK_URL: ${{secrets.SLACK_WEBHOOK}}
+        with:
+          payload: |
+            {
+              "text": "Deploy of ${{needs.setup.outputs.version}} to ${{inputs.environment || 'staging'}}: ${{job.status}}",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*${{github.repository}}* deploy\nVersion: `${{needs.setup.outputs.version}}`\nEnvironment: `${{inputs.environment || 'staging'}}`\nStatus: ${{job.status}}\nActor: ${{github.actor}}\n<${{steps.deploy.outputs.app-url}}|View App>"
+                  }
+                }
+              ]
+            }
