@@ -1,0 +1,13 @@
+[package]
+versioned_files = ["Cargo.toml"]
+changelog = "CHANGELOG.md"
+
+[[workflows]]
+name = "create-changeset"
+
+[[workflows.steps]]
+type = "CreateChangeFile"
+
+[github]
+owner = "jonathanrainer"
+repo = "ghafmt"
