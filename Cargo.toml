@@ -7,7 +7,7 @@ rust-version = "1.92.0"
 description = "An application that allows for consistent formatting of GitHub Actions workflows"
 readme = "README.md"
 repository = "https://github.com/jonathanrainer/ghafmt"
-license = "GPL-3"
+license = "GPL-3.0-only"
 keywords = ["ci", "github-actions", "format"]
 categories = ["command-line-utilities", "development-tools"]
 

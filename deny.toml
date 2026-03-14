@@ -1,0 +1,28 @@
+[advisories]
+version = 2
+db-urls = ["https://github.com/rustsec/advisory-db"]
+# git2 0.18.3 is pinned by fyaml-sys (build-time only, not in the shipped binary)
+ignore = ["RUSTSEC-2026-0008"]
+
+[licenses]
+version = 2
+allow = [
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-3-Clause",
+    "GPL-3.0-only",
+    "ISC",
+    "MIT",
+    "Unicode-3.0",
+]
+
+[bans]
+multiple-versions = "allow"
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-git = [
+    "https://github.com/jonathanrainer/fyaml",
+    "https://github.com/jonathanrainer/fyaml-sys",
+]
