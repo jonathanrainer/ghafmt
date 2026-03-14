@@ -89,7 +89,10 @@ impl Error {
                     .location()
                     .map_or(0, |(line, col)| line_col_to_byte_offset(&src, line, col));
                 // Use just the message text — miette renders the location visually via the span
-                (parse_err.message().to_string(), SourceSpan::from((offset, 0usize)))
+                (
+                    parse_err.message().to_string(),
+                    SourceSpan::from((offset, 0usize)),
+                )
             }
             None => (err.to_string(), SourceSpan::from((0usize, 0usize))),
         };

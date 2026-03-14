@@ -4,12 +4,14 @@ use std::{fs, path::Path};
 use fyaml::Document;
 use tracing::{info, warn};
 
-use crate::errors::{Error, Result, Warning};
-use crate::structure_transformers::{
-    CaseEnforcer, ConcurrencySorter, ContainerSorter, DefaultsSorter, EnvSorter, EnvironmentSorter,
-    FilterSorter, JobSorter, NeedsSorter, OnSorter, PermissionsSorter, RunsOnSorter, StepSorter,
-    StrategySorter, StructureTransformer, TopLevelSorter, WithSorter, WorkflowCallSorter,
-    WorkflowDispatchSorter, WorkflowRunSorter,
+use crate::{
+    errors::{Error, Result, Warning},
+    structure_transformers::{
+        CaseEnforcer, ConcurrencySorter, ContainerSorter, DefaultsSorter, EnvSorter,
+        EnvironmentSorter, FilterSorter, JobSorter, NeedsSorter, OnSorter, PermissionsSorter,
+        RunsOnSorter, StepSorter, StrategySorter, StructureTransformer, TopLevelSorter, WithSorter,
+        WorkflowCallSorter, WorkflowDispatchSorter, WorkflowRunSorter,
+    },
 };
 
 /// Applies the ordered sequence of [`StructureTransformer`]s to a parsed workflow document.
@@ -64,10 +66,13 @@ impl WorkflowProcessor {
     ///
     /// Unlike [`process`][Self::process] this does not perform any I/O, making it
     /// suitable for formatting content that was not read from a file (e.g. stdin).
-    pub(crate) fn process_str(&self, content: String, name: &str) -> Result<(Document, Vec<Warning>)> {
+    pub(crate) fn process_str(
+        &self,
+        content: String,
+        name: &str,
+    ) -> Result<(Document, Vec<Warning>)> {
         let parse_result = Document::parse_str(&content);
-        let mut document =
-            parse_result.map_err(|e| Error::parse_yaml(name, content, &e))?;
+        let mut document = parse_result.map_err(|e| Error::parse_yaml(name, content, &e))?;
 
         let mut warnings: Vec<Warning> = vec![];
 

@@ -3,7 +3,7 @@ use fyaml::{EmitEvent, WriteType};
 
 use crate::{
     constants::TOP_LEVEL_KEY_ORDERING,
-    presentation_transformers::{insert_blank_line_before_comment_block, PresentationTransformer},
+    presentation_transformers::{PresentationTransformer, insert_blank_line_before_comment_block},
 };
 
 #[derive(Default)]

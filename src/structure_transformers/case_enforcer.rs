@@ -1,6 +1,5 @@
 //! Transformer that enforces a consistent casing standard on user-controlled identifiers.
-use std::collections::HashMap;
-use std::sync::LazyLock;
+use std::{collections::HashMap, sync::LazyLock};
 
 use fyaml::{Document, NodeRef};
 use regex::Regex;

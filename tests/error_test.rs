@@ -17,7 +17,8 @@ fn test_parse_error(#[files("tests/fixtures/broken/*.yaml")] path: PathBuf) {
 #[test]
 fn test_read_file_error() {
     let mut formatter = Ghafmt::new();
-    let result = formatter.format_gha_workflow(PathBuf::from("tests/fixtures/broken/does_not_exist.yaml").as_path());
+    let result = formatter
+        .format_gha_workflow(PathBuf::from("tests/fixtures/broken/does_not_exist.yaml").as_path());
     assert!(
         matches!(result, Err(Error::ReadFile { .. })),
         "expected ReadFile error, got: {result:?}"

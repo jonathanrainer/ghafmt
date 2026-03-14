@@ -101,7 +101,11 @@ pub(crate) trait StructureTransformer {
     #[allow(clippy::unwrap_used)]
     // scalar_str() returns Err if the node is not a scalar or contains non-UTF-8 bytes;
     // both are invariants that hold for any well-formed GHA workflow.
-    fn sort_seq_at_path_alphabetically(&self, mut doc: Document, path: &str) -> fyaml::Result<Document> {
+    fn sort_seq_at_path_alphabetically(
+        &self,
+        mut doc: Document,
+        path: &str,
+    ) -> fyaml::Result<Document> {
         if doc.at_path(path).is_some_and(|a| a.is_sequence()) {
             doc.edit().sort_sequence_at(path, |e1, e2| {
                 let v1 = e1.scalar_str().unwrap();
@@ -140,7 +144,11 @@ pub(crate) trait StructureTransformer {
 /// in a document that is a mapping.
 ///
 /// Exits gracefully, and returns the unedited document, if the path given is not a mapping
-fn for_each_mapping_child<F>(mut doc: Document, parent_path: &str, mut f: F) -> fyaml::Result<Document>
+fn for_each_mapping_child<F>(
+    mut doc: Document,
+    parent_path: &str,
+    mut f: F,
+) -> fyaml::Result<Document>
 where
     F: FnMut(Document, &str) -> fyaml::Result<Document>,
 {

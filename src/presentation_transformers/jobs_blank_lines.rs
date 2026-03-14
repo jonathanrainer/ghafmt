@@ -2,7 +2,7 @@
 use fyaml::{EmitEvent, WriteType};
 
 use crate::presentation_transformers::{
-    insert_blank_line_before_comment_block, PresentationTransformer,
+    PresentationTransformer, insert_blank_line_before_comment_block,
 };
 
 #[derive(Default)]
