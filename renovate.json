@@ -2,6 +2,7 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended"],
   "automerge": true,
+  "schedule": ["at any time"],
   "customManagers": [
     {
       "customType": "regex",
