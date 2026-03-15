@@ -79,17 +79,44 @@ fn check_mode_exit_code(#[case] path: &str, #[case] expect_success: bool) {
 }
 
 #[rstest]
-#[case::single_non_existent_file_fail(vec!["tests/fixtures/does_not_exist.yaml"], false)]
-#[case::two_clean_files_succeed(vec!["tests/fixtures/clean/basic_reorder.yaml","tests/fixtures/clean/basic_reorder.yaml"], true)]
-#[case::one_dirty_file_fail(vec!["tests/fixtures/clean/basic_reorder.yaml","tests/fixtures/dirty/step_reorder.yaml"], false)]
-fn check_mode_exits_correctly(#[case] file_args: Vec<&str>, #[case] expect_success: bool) {
+#[case::single_non_existent_file_fail(vec!["tests/fixtures/does_not_exist.yaml"], false, false)]
+#[case::two_clean_files_succeed(vec!["tests/fixtures/clean/basic_reorder.yaml","tests/fixtures/clean/basic_reorder.yaml"], true, false)]
+#[case::one_dirty_file_fail(vec!["tests/fixtures/clean/basic_reorder.yaml","tests/fixtures/dirty/step_reorder.yaml"], false, true)]
+fn check_mode_exits_correctly(
+    #[case] file_args: Vec<&str>,
+    #[case] expect_success: bool,
+    #[case] produce_diff: bool,
+) {
     let mut assertion = cmd().arg("--check").args(file_args).assert();
-    assertion = assertion.stdout("");
     if expect_success {
-        assertion.success();
+        assertion.success().stderr("").stdout("");
     } else {
-        assertion.failure();
+        assertion = assertion.failure();
+        if produce_diff {
+            assertion
+                .stderr(predicates::str::contains("---"))
+                .stdout("");
+        }
     }
+}
+
+#[test]
+fn check_mode_multiple_diffs() {
+    cmd()
+        .arg("--check")
+        .args(vec![
+            "tests/fixtures/dirty/step_reorder.yaml",
+            "tests/fixtures/dirty/all_job_keys.yaml",
+        ])
+        .assert()
+        .failure()
+        .stderr(predicates::str::contains(
+            "--- tests/fixtures/dirty/step_reorder.yaml".to_string(),
+        ))
+        .stderr(predicates::str::contains(
+            "--- tests/fixtures/dirty/all_job_keys.yaml".to_string(),
+        ))
+        .stdout("");
 }
 
 #[rstest]
@@ -104,8 +131,6 @@ fn check_mode_stdin(#[case] path: &str, #[case] expect_success: bool) {
         assertion.failure();
     }
 }
-
-// --- Write mode ---
 
 #[rstest]
 #[case::format_file_in_place(vec![("tests/fixtures/dirty/basic_reorder.yaml", "tests/fixtures/clean/basic_reorder.yaml")], true)]
