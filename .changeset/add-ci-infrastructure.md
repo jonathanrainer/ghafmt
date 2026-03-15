@@ -1,5 +1,5 @@
 ---
-default: patch
+default: internal
 ---
 
 # Add CI infrastructure

@@ -1,5 +1,5 @@
 ---
-default: patch
+default: internal
 ---
 
 # Set Renovate to update dependencies in real time
