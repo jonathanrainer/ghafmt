@@ -32,7 +32,7 @@ enum ColorMode {
 #[allow(clippy::struct_excessive_bools)]
 #[command(
     author,
-    version,
+    version = env!("GHAFMT_VERSION_STRING"),
     about,
     after_help = "\
 Examples:
