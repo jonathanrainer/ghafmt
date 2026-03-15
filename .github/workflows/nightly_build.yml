@@ -19,6 +19,7 @@ jobs:
           echo "build_metadata=nightly.${DATE}.${SHA}" >> "$GITHUB_OUTPUT"
 
   build_artifacts:
+    name: Build Artifacts
     needs: setup
     uses: ./.github/workflows/_build_artifacts.yml
     with:
