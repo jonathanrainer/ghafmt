@@ -1,7 +1,7 @@
 //! Transformer that enforces a consistent casing standard on user-controlled identifiers.
 use std::{collections::HashMap, sync::LazyLock};
 
-use fyaml::{Document, NodeRef};
+use fyaml::{Document, NodeRef, NodeStyle};
 use regex::Regex;
 use tracing::debug;
 
@@ -231,7 +231,17 @@ impl StructureTransformer for CaseEnforcer {
 
         // Then mutate the document to perform the updates necessary
         for (path, new_value) in updates {
-            if doc.edit().set_yaml_at(&path, &new_value).is_err() {
+            // Check the existing style first: set_yaml_at with a bare multi-line string
+            // succeeds (libfyaml folds newlines to spaces) rather than failing, so we
+            // cannot rely on the error path to detect block scalars.  Read the style
+            // up front and format the new value appropriately.
+            let is_literal = doc
+                .at_path(&path)
+                .is_some_and(|n| n.style() == NodeStyle::Literal);
+            if is_literal {
+                let block = Self::format_as_yaml_literal_block(&new_value);
+                doc.edit().set_yaml_at(&path, &block)?;
+            } else if doc.edit().set_yaml_at(&path, &new_value).is_err() {
                 doc.edit().set_scalar_at(&path, &new_value)?;
             }
         }
@@ -399,6 +409,21 @@ impl CaseEnforcer {
             }
         }
         ref_renames
+    }
+
+    /// Format `content` as a YAML literal block scalar (`|`).
+    ///
+    /// Used to preserve `|` block-scalar style when updating a multi-line scalar
+    /// whose content contains `${{ }}` expressions: `set_yaml_at` rejects bare
+    /// newlines as inline YAML, but accepts a properly-formed `|\n  …` snippet.
+    fn format_as_yaml_literal_block(content: &str) -> String {
+        let mut result = String::from("|\n");
+        for line in content.lines() {
+            result.push_str("  ");
+            result.push_str(line);
+            result.push('\n');
+        }
+        result
     }
 
     /// Actually apply a set of renames to a particular string value
