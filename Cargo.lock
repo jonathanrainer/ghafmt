@@ -431,6 +431,7 @@ dependencies = [
  "predicates",
  "regex",
  "rstest",
+ "similar",
  "similar-asserts",
  "tempfile",
  "thiserror",

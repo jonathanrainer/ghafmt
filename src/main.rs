@@ -10,6 +10,7 @@ use std::{
 use clap::Parser;
 use ghafmt::{Error, Ghafmt, Warning};
 use miette::{GraphicalReportHandler, GraphicalTheme};
+use similar::TextDiff;
 use walkdir::WalkDir;
 
 /// The conventional marker used to request stdin as an input source.
@@ -59,7 +60,7 @@ Examples:
 struct Args {
     /// Workflow files or directories to format. Use `-` to read from stdin.
     files: Vec<PathBuf>,
-    /// Check whether files are formatted; exit 1 if any differ (no output written).
+    /// Check whether files are formatted; exit 1 if any differ printing a diff to stderr.
     #[arg(long, group = "mode")]
     check: bool,
     /// Write formatted output back to each file in place.
@@ -191,6 +192,12 @@ fn run_check(
                 if let Some(orig) = original_content(success)
                     && orig != success.output
                 {
+                    eprintln!("--- {}", success.path.display());
+                    eprintln!("+++ {}\t(formatted)", success.path.display());
+                    eprintln!(
+                        "{}",
+                        TextDiff::from_lines(orig.as_str(), success.output.as_str()).unified_diff()
+                    );
                     exit_code = 1;
                 }
             }
@@ -295,7 +302,7 @@ fn main() {
 
     // Default (stdout) mode can only handle one file; all other modes accept many.
     if (!args.check && !args.write && !args.list) && files.len() > 1 {
-        eprintln!("error: multiple files require --write");
+        eprintln!("error: multiple files require --write, --check, or --list");
         process::exit(1);
     }
 
