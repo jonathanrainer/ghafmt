@@ -1,6 +1,8 @@
 [package]
 versioned_files = ["Cargo.toml"]
 changelog = "CHANGELOG.md"
+ignore_conventional_commits = true
+assets = [{path = "artifacts/*"}]
 
 [[workflows]]
 name = "create-changeset"
@@ -8,6 +10,52 @@ name = "create-changeset"
 [[workflows.steps]]
 type = "CreateChangeFile"
 
+[[workflows]]
+name = "prepare-release"
+
+[[workflows.steps]]
+type = "Command"
+command = "git switch -c release"
+
+[[workflows.steps]]
+type = "PrepareRelease"
+
+[[workflows.steps]]
+type = "Command"
+command = "git commit -am \"chore: prepare release $version\""
+
+[[workflows.steps]]
+type = "Command"
+command = "git push --force --set-upstream origin release"
+
+[[workflows.steps]]
+type = "CreatePullRequest"
+base = "main"
+
+[workflows.steps.title]
+template = "chore: prepare release $version"
+
+[workflows.steps.body]
+template = "This PR was created by Knope. Merging it will create a new release.\n\n$changelog"
+
+[[workflows]]
+name = "release"
+
+[[workflows.steps]]
+type = "Release"
+
 [github]
 owner = "jonathanrainer"
 repo = "ghafmt"
+
+[release_notes]
+change_templates = [
+    "### $summary\n\n$details ($commit_hash)",
+    "- $summary ($commit_hash)",
+    "### $summary\n\n$details",
+    "- $summary",
+]
+
+[[package.extra_changelog_sections]]
+name = "Project Infrastructure"
+types = ["internal"]
