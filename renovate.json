@@ -11,6 +11,18 @@
     {
       "customType": "regex",
       "managerFilePatterns": [
+        "^rust-toolchain\\.toml$"
+      ],
+      "matchStrings": [
+        "channel = \"(?<currentValue>[\\d.]+)\""
+      ],
+      "datasourceTemplate": "github-releases",
+      "packageNameTemplate": "rust-lang/rust",
+      "versioningTemplate": "loose"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
         "/^\\.github/workflows/.*\\.ya?ml$/"
       ],
       "matchStrings": [
@@ -39,6 +51,13 @@
         "# renovate: datasource=(?<datasource>[^\\s]+) depName=(?<depName>[^\\s]+)\\n\\s+version: (?<currentValue>[^\\s]+)"
       ],
       "versioningTemplate": "semver"
+    }
+  ],
+  "packageRules": [
+    {
+      "matchPackageNames": ["rust-lang/rust"],
+      "groupName": "Rust toolchain version",
+      "groupSlug": "rust-toolchain-version"
     }
   ]
 }
