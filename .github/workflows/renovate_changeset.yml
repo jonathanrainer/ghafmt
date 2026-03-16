@@ -7,7 +7,7 @@ on:
 jobs:
   generate_changeset:
     name: Generate Changeset
-    if: github.actor == 'renovate[bot]'
+    if: github.event.pull_request.user.login == 'renovate[bot]'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -18,7 +18,7 @@ jobs:
 
       - name: Create changeset
         run: |
-          SLUG=$(echo "$HEAD_REF" | sed 's/[^a-zA-Z0-9]/-/g' | tr '[:upper:]' '[:lower:]')
+          SLUG=$(echo "$HEAD_REF" | sed 's/[^a-zA-Z0-9]/_/g' | tr '[:upper:]' '[:lower:]')
           FILE=".changeset/${SLUG}.md"
           if [ ! -f "$FILE" ]; then
             printf -- '---\ndefault: dependencies\n---\n\n%s\n' \
