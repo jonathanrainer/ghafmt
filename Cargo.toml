@@ -19,7 +19,7 @@ miette = { version = "=7.6.0", features = ["fancy"] }
 thiserror = "=2.0.18"
 similar = "2.7.0"
 tracing = "=0.1.44"
-tracing-subscriber = "=0.3.22"
+tracing-subscriber = "=0.3.23"
 regex = "=1.12.3"
 walkdir = "=2.5.0"
 
