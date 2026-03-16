@@ -1,27 +1,43 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended"],
+  "extends": [
+    "config:recommended"
+  ],
   "automerge": true,
-  "schedule": ["at any time"],
+  "schedule": [
+    "at any time"
+  ],
   "customManagers": [
     {
       "customType": "regex",
-      "fileMatch": ["^\\.github/workflows/.*\\.ya?ml$"],
-      "matchStrings": ["toolchain: \"(?<currentValue>[\\d.]+)\""],
+      "managerFilePatterns": [
+        "/^\\.github/workflows/.*\\.ya?ml$/"
+      ],
+      "matchStrings": [
+        "toolchain: \"(?<currentValue>[\\d.]+)\""
+      ],
       "datasourceTemplate": "github-releases",
       "packageNameTemplate": "rust-lang/rust",
       "versioningTemplate": "loose"
     },
     {
       "customType": "regex",
-      "fileMatch": ["^\\.github/workflows/.*\\.ya?ml$"],
-      "matchStrings": ["docker://(?<depName>[^@]+)@(?<currentDigest>sha256:[a-f0-9]+)\\s*#\\s*(?<currentValue>[^\\s]+)"],
+      "managerFilePatterns": [
+        "/^\\.github/workflows/.*\\.ya?ml$/"
+      ],
+      "matchStrings": [
+        "docker://(?<depName>[^@]+)@(?<currentDigest>sha256:[a-f0-9]+)\\s*#\\s*(?<currentValue>[^\\s]+)"
+      ],
       "datasourceTemplate": "docker"
     },
     {
       "customType": "regex",
-      "fileMatch": ["^\\.github/workflows/.*\\.ya?ml$"],
-      "matchStrings": ["# renovate: datasource=(?<datasource>[^\\s]+) depName=(?<depName>[^\\s]+)\\n\\s+version: (?<currentValue>[^\\s]+)"],
+      "managerFilePatterns": [
+        "/^\\.github/workflows/.*\\.ya?ml$/"
+      ],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>[^\\s]+) depName=(?<depName>[^\\s]+)\\n\\s+version: (?<currentValue>[^\\s]+)"
+      ],
       "versioningTemplate": "semver"
     }
   ]
