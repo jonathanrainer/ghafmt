@@ -11,10 +11,10 @@
     {
       "customType": "regex",
       "managerFilePatterns": [
-        "/^\\.github/workflows/.*\\.ya?ml$/"
+        "^rust-toolchain\\.toml$"
       ],
       "matchStrings": [
-        "toolchain: \"(?<currentValue>[\\d.]+)\""
+        "channel = \"(?<currentValue>[\\d.]+)\""
       ],
       "datasourceTemplate": "github-releases",
       "packageNameTemplate": "rust-lang/rust",
