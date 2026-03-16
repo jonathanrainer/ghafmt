@@ -59,3 +59,7 @@ change_templates = [
 [[package.extra_changelog_sections]]
 name = "Project Infrastructure"
 types = ["internal"]
+
+[[package.extra_changelog_sections]]
+name = "Dependencies"
+types = ["dependencies"]
