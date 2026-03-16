@@ -38,6 +38,7 @@ jobs:
     needs: setup
     if: github.head_ref == 'release' && github.event.pull_request.merged == true
     permissions:
+      contents: read
       packages: write
     uses: ./.github/workflows/_build_docker.yml
     with:
