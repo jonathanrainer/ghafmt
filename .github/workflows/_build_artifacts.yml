@@ -48,7 +48,7 @@ jobs:
           version: latest
 
       - if: runner.os == 'Linux'
-        uses: taiki-e/install-action@a57ddfbcd928cf9406a78dcc300dacc5d367a547 # v2.68.31
+        uses: taiki-e/install-action@cbb1dcaa26e1459e2876c39f61c1e22a1258aac5 # v2.68.33
         with:
           tool: cargo-zigbuild
 
