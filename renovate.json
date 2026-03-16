@@ -26,6 +26,18 @@
         "/^\\.github/workflows/.*\\.ya?ml$/"
       ],
       "matchStrings": [
+        "toolchain: \"(?<currentValue>[\\d.]+)\""
+      ],
+      "datasourceTemplate": "github-releases",
+      "packageNameTemplate": "rust-lang/rust",
+      "versioningTemplate": "loose"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^\\.github/workflows/.*\\.ya?ml$/"
+      ],
+      "matchStrings": [
         "docker://(?<depName>[^@]+)@(?<currentDigest>sha256:[a-f0-9]+)\\s*#\\s*(?<currentValue>[^\\s]+)"
       ],
       "datasourceTemplate": "docker"
@@ -39,6 +51,13 @@
         "# renovate: datasource=(?<datasource>[^\\s]+) depName=(?<depName>[^\\s]+)\\n\\s+version: (?<currentValue>[^\\s]+)"
       ],
       "versioningTemplate": "semver"
+    }
+  ],
+  "packageRules": [
+    {
+      "matchPackageNames": ["rust-lang/rust"],
+      "groupName": "Rust toolchain version",
+      "groupSlug": "rust-toolchain-version"
     }
   ]
 }
