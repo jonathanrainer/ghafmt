@@ -26,9 +26,20 @@ jobs:
       build_metadata: ${{ needs.setup.outputs.build_metadata }}
       retention_days: 7
 
+  build_docker:
+    name: Build Docker Image
+    needs: setup
+    permissions:
+      packages: write
+    uses: ./.github/workflows/_build_docker.yml
+    with:
+      version: nightly
+      tag_latest: false
+      build_metadata: ${{ needs.setup.outputs.build_metadata }}
+
   publish_nightly:
     name: Publish Nightly Release
-    needs: [build_artifacts, setup]
+    needs: [build_artifacts, build_docker, setup]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -50,7 +61,12 @@ jobs:
           gh release create nightly artifacts/* \
             --prerelease \
             --title "Nightly Build (${{ needs.setup.outputs.build_metadata }})" \
-            --notes "Automated nightly build from \`${{ github.sha }}\`." \
+            --notes "Automated nightly build from \`${{ github.sha }}\`.
+
+          ## Docker Image
+          \`\`\`
+          docker pull ghcr.io/${{ github.repository }}:nightly
+          \`\`\`" \
             --target "${{ github.sha }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
