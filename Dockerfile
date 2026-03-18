@@ -9,8 +9,10 @@ WORKDIR /src
 COPY . .
 
 # CARGO_BUILD_TARGET and RUST_MUSL_CROSS_TARGET are set by the rust-cross image.
+# BINDGEN_EXTRA_CLANG_ARGS points clang at the musl sysroot so bindgen can find headers.
 # Copy the binary to a fixed path so the scratch stage doesn't need to know the target.
-RUN cargo build --release \
+RUN BINDGEN_EXTRA_CLANG_ARGS="--sysroot=/usr/local/musl/${RUST_MUSL_CROSS_TARGET}" \
+    cargo build --release \
     && cp "target/${RUST_MUSL_CROSS_TARGET}/release/ghafmt" /ghafmt
 
 FROM scratch
