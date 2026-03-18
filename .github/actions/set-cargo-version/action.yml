@@ -10,5 +10,25 @@ runs:
   using: composite
   steps:
     - name: Set version in Cargo.toml
-      run: yq -i -p toml -o toml '.package.version = "${{ inputs.version }}"' Cargo.toml
+      env:
+        VERSION: ${{ inputs.version }}
+      run: |
+        YQ=yq
+        # Test whether the installed yq supports TOML output (older versions on ubuntu-24.04-arm do not).
+        if ! printf '[package]\nversion = "0.0.0"\n' | yq -p toml -o toml '.' > /dev/null 2>&1; then
+          echo "::warning::Installed yq does not support TOML output ($(yq --version 2>/dev/null || echo 'version unknown')). Downloading latest release."
+          echo "::warning::WORKAROUND ACTIVE: remove the download block in .github/actions/set-cargo-version/action.yml once ubuntu-24.04-arm ships yq with full TOML output support."
+          OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+          case "$(uname -m)" in
+            x86_64) YQ_ARCH=amd64 ;;
+            aarch64 | arm64) YQ_ARCH=arm64 ;;
+            *) echo "Unsupported architecture: $(uname -m)" && exit 1 ;;
+          esac
+          YQ=/tmp/yq
+          curl -fsSL "https://github.com/mikefarah/yq/releases/latest/download/yq_${OS}_${YQ_ARCH}" -o "$YQ"
+          chmod +x "$YQ"
+        elif [ "$(uname -s)" = "Linux" ] && [ "$(uname -m)" = "aarch64" ]; then
+          echo "::notice::Installed yq now supports TOML output on this aarch64 Linux runner. The download workaround in .github/actions/set-cargo-version/action.yml is no longer needed and can be removed."
+        fi
+        "$YQ" -i -p toml -o toml '.package.version = strenv(VERSION)' Cargo.toml
       shell: bash
