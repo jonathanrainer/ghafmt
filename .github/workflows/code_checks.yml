@@ -44,9 +44,6 @@ jobs:
         uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
 
       - name: Install actionlint
-        env:
-          # renovate: datasource=github-releases depName=rhysd/actionlint
-          ACTIONLINT_VERSION: 1.7.11
         run: |
           TARBALL="actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
           BASE_URL="https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}"
@@ -56,6 +53,9 @@ jobs:
           echo "${EXPECTED}  /tmp/actionlint.tar.gz" | sha256sum --check
           tar -xzf /tmp/actionlint.tar.gz -C /tmp actionlint
           sudo mv /tmp/actionlint /usr/local/bin/actionlint
+        env:
+          # renovate: datasource=github-releases depName=rhysd/actionlint
+          ACTIONLINT_VERSION: 1.7.11
 
       - name: Run tests
         run: cargo test
