@@ -1,11 +1,9 @@
 name: Set Cargo Version
 description: Installs cargo-edit via cargo-binstall and sets the package version in Cargo.toml
-
 inputs:
   version:
     description: "Version to set (e.g. 0.0.0-nightly.20260315.abc1234)"
     required: true
-
 runs:
   using: composite
   steps:
@@ -13,7 +11,6 @@ runs:
       uses: taiki-e/install-action@cbb1dcaa26e1459e2876c39f61c1e22a1258aac5 # v2.68.33
       with:
         tool: cargo-binstall
-
     - name: Install cargo-edit and set version
       run: cargo binstall --no-confirm cargo-edit && cargo set-version ${{ inputs.version }}
       shell: bash

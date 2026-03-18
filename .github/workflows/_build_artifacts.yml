@@ -3,15 +3,15 @@ name: Build Artifacts
 on:
   workflow_call:
     inputs:
-      version:
-        description: "Version to set in Cargo.toml before building (e.g. 0.0.0-nightly.20260315.abc1234)"
-        type: string
-        required: true
       retention_days:
         description: "Number of days to retain uploaded artifacts"
         type: number
         required: false
         default: 90
+      version:
+        description: "Version to set in Cargo.toml before building (e.g. 0.0.0-nightly.20260315.abc1234)"
+        type: string
+        required: true
 
 jobs:
   build_artifacts:
