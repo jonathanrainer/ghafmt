@@ -10,6 +10,7 @@ jobs:
     name: Compute Build Metadata
     runs-on: ubuntu-24.04
     outputs:
+      display_version: ${{ steps.version.outputs.display_version }}
       version: ${{ steps.version.outputs.version }}
     steps:
       - name: Compute nightly version
@@ -18,6 +19,7 @@ jobs:
           DATE=$(date -u +%Y%m%d)
           SHA=$(echo "${{ github.sha }}" | cut -c1-7)
           echo "version=0.0.0-nightly.${DATE}.${SHA}" >> "$GITHUB_OUTPUT"
+          echo "display_version=nightly.${DATE}.${SHA}" >> "$GITHUB_OUTPUT"
 
   build_artifacts:
     name: Build Artifacts
@@ -42,6 +44,7 @@ jobs:
   publish_nightly:
     name: Publish Nightly Release
     needs: [build_artifacts, build_docker, setup]
+    if: github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-24.04
     permissions:
       contents: write
@@ -64,7 +67,7 @@ jobs:
         run: |
           gh release create nightly artifacts/* \
             --prerelease \
-            --title "Nightly Build (${{ needs.setup.outputs.version }})" \
+            --title "Nightly Build (${{ needs.setup.outputs.display_version }})" \
             --notes "Automated nightly build from \`${{ github.sha }}\`.
 
           ## Docker Image
