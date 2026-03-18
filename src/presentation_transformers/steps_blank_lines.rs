@@ -264,6 +264,32 @@ mod tests {
                   - id: a
         "}.to_string()
     )]
+    #[case::literal_keep_block_no_double_blank(
+        // A |+ scalar already provides a trailing blank line; StepsBlankLines must not
+        // insert a second one (idempotency check).
+        Document::from_string(indoc! {"
+            jobs:
+              foo:
+                steps:
+                  - name: step a
+                    run: |+
+                      echo hello
+
+                  - name: step b
+                    run: echo world
+        "}.to_string()).expect("test input is valid YAML"),
+        indoc! {"
+            jobs:
+              foo:
+                steps:
+                  - name: step a
+                    run: |+
+                      echo hello
+
+                  - name: step b
+                    run: echo world
+        "}.to_string()
+    )]
     #[case::comment_before_first_step_and_between_subsequent(
         Document::from_string(indoc! {"
             jobs:
