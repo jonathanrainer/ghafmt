@@ -1,8 +1,7 @@
 //! Binary entry point for the `ghafmt` CLI.
 use std::{
-    fs,
     fs::read_to_string,
-    io::Read,
+    io::{Read, Write as _},
     path::{Path, PathBuf},
     process,
 };
@@ -15,6 +14,9 @@ use walkdir::WalkDir;
 
 /// The conventional marker used to request stdin as an input source.
 const STDIN: &str = "-";
+
+/// Maximum number of bytes accepted from stdin to guard against runaway memory use.
+const STDIN_SIZE_LIMIT: u64 = 10 * 1024 * 1024; // 10 MB
 
 /// When to use colour in diagnostic output.
 #[derive(clap::ValueEnum, Clone, Copy, Debug)]
@@ -123,7 +125,7 @@ fn expand_paths(paths: Vec<PathBuf>) -> Vec<PathBuf> {
     for path in paths {
         if path.is_dir() {
             let mut dir_files: Vec<PathBuf> = WalkDir::new(&path)
-                .follow_links(true)
+                .follow_links(false)
                 .into_iter()
                 .filter_map(Result::ok)
                 .filter(|e| e.file_type().is_file())
@@ -221,7 +223,7 @@ fn run_write(
         match result {
             Ok(success) => {
                 render_warnings(handler, &success.warnings, quiet);
-                if let Err(e) = fs::write(&success.path, &success.output) {
+                if let Err(e) = atomic_write(&success.path, &success.output) {
                     eprintln!("{}: {e}", success.path.display());
                     exit_code = 1;
                 }
@@ -278,6 +280,19 @@ fn run_default(
     0
 }
 
+/// Write `content` to `path` atomically: write to a temp file in the same
+/// directory, then rename it into place. This prevents a partial file if the
+/// process is interrupted mid-write.
+fn atomic_write(path: &Path, content: &str) -> std::io::Result<()> {
+    let dir = path.parent().unwrap_or_else(|| Path::new("."));
+    let mut tmp = tempfile::NamedTempFile::new_in(dir)?;
+    tmp.write_all(content.as_bytes())?;
+    match tmp.persist(path) {
+        Ok(_) => Ok(()),
+        Err(e) => Err(e.error),
+    }
+}
+
 /// Parse CLI arguments, format the given workflow file(s), and handle output
 /// according to the selected mode.
 fn main() {
@@ -313,21 +328,28 @@ fn main() {
     for file in &files {
         let result = if is_stdin(file) {
             let mut content = String::new();
-            if let Err(source) = std::io::stdin().read_to_string(&mut content) {
-                Err(Error::ReadFile {
+            match std::io::stdin()
+                .take(STDIN_SIZE_LIMIT + 1)
+                .read_to_string(&mut content)
+            {
+                Err(source) => Err(Error::ReadFile {
                     path: file.clone(),
                     source,
-                })
-            } else {
-                let original = content.clone();
-                formatter
-                    .format_str(content, "<stdin>")
-                    .map(|(output, warnings)| Success {
-                        path: file.clone(),
-                        output,
-                        original: Some(original),
-                        warnings,
-                    })
+                }),
+                Ok(n) if n as u64 > STDIN_SIZE_LIMIT => Err(Error::StdinTooLarge {
+                    limit_mb: (STDIN_SIZE_LIMIT / (1024 * 1024)) as usize,
+                }),
+                Ok(_) => {
+                    let original = content.clone();
+                    formatter
+                        .format_str(&content, "<stdin>")
+                        .map(|(output, warnings)| Success {
+                            path: file.clone(),
+                            output,
+                            original: Some(original),
+                            warnings,
+                        })
+                }
             }
         } else {
             formatter

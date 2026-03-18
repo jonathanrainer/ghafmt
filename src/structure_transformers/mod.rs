@@ -61,9 +61,6 @@ pub(crate) trait StructureTransformer {
 
     /// Given a document, sort the mapping at the root path, applying the given ordering.
     /// If the root path isn't a mapping, then just return the document.
-    #[allow(clippy::unwrap_used)]
-    // scalar_str() returns Err if the node is not a scalar or contains non-UTF-8 bytes;
-    // YAML map keys are always scalar nodes, and GHA workflows require valid UTF-8 throughout.
     fn sort_mapping_at_path(
         &self,
         mut workflow_document: Document,
@@ -85,8 +82,8 @@ pub(crate) trait StructureTransformer {
                 .collect();
             let mut editor = workflow_document.edit();
             editor.sort_mapping_at(root_path, |k1, _, k2, _| {
-                let s1 = k1.scalar_str().unwrap();
-                let s2 = k2.scalar_str().unwrap();
+                let s1 = k1.scalar_str().unwrap_or_default();
+                let s2 = k2.scalar_str().unwrap_or_default();
                 let pos1 = position_map.get(s1).copied().unwrap_or(usize::MAX);
                 let pos2 = position_map.get(s2).copied().unwrap_or(usize::MAX);
                 pos1.cmp(&pos2)
@@ -98,9 +95,6 @@ pub(crate) trait StructureTransformer {
 
     /// Helper method to allow sequences to be sorted alphabetically, given a specific document
     /// at a specific path
-    #[allow(clippy::unwrap_used)]
-    // scalar_str() returns Err if the node is not a scalar or contains non-UTF-8 bytes;
-    // both are invariants that hold for any well-formed GHA workflow.
     fn sort_seq_at_path_alphabetically(
         &self,
         mut doc: Document,
@@ -108,8 +102,8 @@ pub(crate) trait StructureTransformer {
     ) -> fyaml::Result<Document> {
         if doc.at_path(path).is_some_and(|a| a.is_sequence()) {
             doc.edit().sort_sequence_at(path, |e1, e2| {
-                let v1 = e1.scalar_str().unwrap();
-                let v2 = e2.scalar_str().unwrap();
+                let v1 = e1.scalar_str().unwrap_or_default();
+                let v2 = e2.scalar_str().unwrap_or_default();
                 v1.cmp(v2)
             })?;
         }
@@ -121,9 +115,6 @@ pub(crate) trait StructureTransformer {
     ///
     /// Returns the document gracefully if the path is not a mapping, and therefore cannot
     /// be sorted
-    #[allow(clippy::unwrap_used)]
-    // scalar_str() returns Err if the node is not a scalar or contains non-UTF-8 bytes;
-    // both are invariants that hold for any well-formed GHA workflow.
     fn sort_path_to_mapping_alphabetically(
         &self,
         mut doc: Document,
@@ -131,8 +122,8 @@ pub(crate) trait StructureTransformer {
     ) -> fyaml::Result<Document> {
         if doc.at_path(path).is_some_and(|a| a.is_mapping()) {
             doc.edit().sort_mapping_at(path, |k1, _, k2, _| {
-                let key1 = k1.scalar_str().unwrap();
-                let key2 = k2.scalar_str().unwrap();
+                let key1 = k1.scalar_str().unwrap_or_default();
+                let key2 = k2.scalar_str().unwrap_or_default();
                 key1.cmp(key2)
             })?;
         }

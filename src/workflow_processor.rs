@@ -58,7 +58,7 @@ impl WorkflowProcessor {
             path: file.to_path_buf(),
             source,
         })?;
-        self.process_str(content, &file.display().to_string())
+        self.process_str(&content, &file.display().to_string())
     }
 
     /// Parse `content` (identified as `name` in diagnostics), apply all transformers,
@@ -68,10 +68,10 @@ impl WorkflowProcessor {
     /// suitable for formatting content that was not read from a file (e.g. stdin).
     pub(crate) fn process_str(
         &self,
-        content: String,
+        content: &str,
         name: &str,
     ) -> Result<(Document, Vec<Warning>)> {
-        let parse_result = Document::parse_str(&content);
+        let parse_result = Document::parse_str(content);
         let mut document = parse_result.map_err(|e| Error::parse_yaml(name, content, &e))?;
 
         let mut warnings: Vec<Warning> = vec![];
@@ -91,7 +91,7 @@ impl WorkflowProcessor {
                     warn!("Transformer '{}' failed: {}", transformer_name, e);
                     let restore_result = Document::parse_str(&snapshot);
                     document = restore_result
-                        .map_err(|e| Error::parse_yaml("<internal>", snapshot, &e))?;
+                        .map_err(|e| Error::parse_yaml("<internal>", &snapshot, &e))?;
                     warnings.push(Warning::StructureTransform {
                         transformer: transformer_name,
                         source: e,

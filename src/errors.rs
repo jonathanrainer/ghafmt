@@ -52,6 +52,17 @@ pub enum Error {
         #[source]
         source: fyaml::Error,
     },
+
+    /// The content piped to stdin exceeded the maximum allowed size.
+    #[error("stdin input exceeds the maximum allowed size of {limit_mb} MB")]
+    #[diagnostic(
+        code(ghafmt::io::stdin_too_large),
+        help("pipe a smaller file or pass file paths directly")
+    )]
+    StdinTooLarge {
+        /// The limit in megabytes.
+        limit_mb: usize,
+    },
 }
 
 /// Non-fatal warnings produced during formatting.
@@ -76,32 +87,56 @@ pub enum Warning {
     },
 }
 
+/// Number of lines of context to include above and below a parse error in diagnostics.
+/// Limits how much of the file is exposed on stderr, reducing the risk of accidentally
+/// printing secrets that appear elsewhere in the workflow file.
+const PARSE_ERROR_CONTEXT_LINES: usize = 5;
+
 impl Error {
     /// Build a [`Error::ParseYaml`] from a `fyaml` parse error and the raw source text.
     ///
-    /// Converts the 1-based line/column from `fyaml` into a byte offset for miette's
-    /// source renderer. If location information is unavailable, the span points to the
-    /// start of the file.
-    pub(crate) fn parse_yaml(filename: &str, src: String, err: &fyaml::Error) -> Self {
-        let (message, span) = match err.as_parse_error() {
-            Some(parse_err) => {
-                let offset = parse_err
-                    .location()
-                    .map_or(0, |(line, col)| line_col_to_byte_offset(&src, line, col));
-                // Use just the message text — miette renders the location visually via the span
-                (
-                    parse_err.message().to_string(),
-                    SourceSpan::from((offset, 0usize)),
-                )
+    /// Only a window of [`PARSE_ERROR_CONTEXT_LINES`] lines around the error is embedded
+    /// in the diagnostic, so that secrets appearing elsewhere in the file are not printed
+    /// to stderr. Converts the 1-based line/column from `fyaml` into a byte offset within
+    /// that window for miette's source renderer.
+    pub(crate) fn parse_yaml(filename: &str, src: &str, err: &fyaml::Error) -> Self {
+        if let Some(parse_err) = err.as_parse_error() {
+            let (line, col) = parse_err.location().unwrap_or((1, 1));
+            let (windowed, window_start) =
+                source_window(src, line as usize, PARSE_ERROR_CONTEXT_LINES);
+            let byte_offset = line_col_to_byte_offset(src, line, col);
+            let span = SourceSpan::from((byte_offset.saturating_sub(window_start), 0usize));
+            Self::ParseYaml {
+                message: parse_err.message().to_string(),
+                src: NamedSource::new(filename, windowed),
+                span,
             }
-            None => (err.to_string(), SourceSpan::from((0usize, 0usize))),
-        };
-        Self::ParseYaml {
-            message,
-            src: NamedSource::new(filename, src),
-            span,
+        } else {
+            // No location info — include only the first 512 bytes to avoid leaking secrets.
+            let truncated: String = src.chars().take(512).collect();
+            Self::ParseYaml {
+                message: err.to_string(),
+                src: NamedSource::new(filename, truncated),
+                span: SourceSpan::from((0usize, 0usize)),
+            }
         }
     }
+}
+
+/// Extract a window of `±context` lines around `error_line` (1-based) from `src`.
+///
+/// Returns `(window, byte_offset_of_window_start)` where the byte offset can be used
+/// to adjust a span computed against the full source into one relative to the window.
+fn source_window(src: &str, error_line: usize, context: usize) -> (String, usize) {
+    let lines: Vec<&str> = src.split('\n').collect();
+    if lines.is_empty() {
+        return (String::new(), 0);
+    }
+    let idx = error_line.saturating_sub(1).min(lines.len() - 1);
+    let start = idx.saturating_sub(context);
+    let end = (idx + context + 1).min(lines.len());
+    let byte_start: usize = lines[..start].iter().map(|l| l.len() + 1).sum();
+    (lines[start..end].join("\n"), byte_start)
 }
 
 /// Convert a 1-based (line, column) pair to a byte offset within `source`.

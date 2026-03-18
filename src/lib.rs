@@ -64,7 +64,7 @@ impl Ghafmt {
     ///
     /// Returns an error if `content` cannot be parsed as valid YAML.
     /// Transformer failures are returned as warnings rather than errors.
-    pub fn format_str(&mut self, content: String, name: &str) -> Result<(String, Vec<Warning>)> {
+    pub fn format_str(&mut self, content: &str, name: &str) -> Result<(String, Vec<Warning>)> {
         info!("Beginning Document Processing...");
         let (yaml, warnings) = self.workflow_processor.process_str(content, name)?;
         info!("Emitting workflow...");

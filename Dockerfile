@@ -1,6 +1,11 @@
 ARG TARGETARCH
 
-FROM --platform=$BUILDPLATFORM ghcr.io/rust-cross/rust-musl-cross:${TARGETARCH}-musl AS builder
+# Digest-pinned per-platform base images. To update, run:
+#   docker buildx imagetools inspect ghcr.io/rust-cross/rust-musl-cross:<tag> --format '{{json .Manifest}}' | jq -r .digest
+FROM --platform=linux/amd64 ghcr.io/rust-cross/rust-musl-cross:amd64-musl@sha256:bcf6a66615f9d5bae659e38ab4311260e0488d1c34ad0ab9f9147f4cd5ef64ed AS base-amd64
+FROM --platform=linux/amd64 ghcr.io/rust-cross/rust-musl-cross:arm64-musl@sha256:eab6a58ff66eaa33fa87fc31ed11403596719ca3f23aa51626fb993d77c1200b AS base-arm64
+
+FROM base-${TARGETARCH} AS builder
 
 RUN apt-get update && apt-get install -y --no-install-recommends libssl-dev pkg-config \
     && rm -rf /var/lib/apt/lists/*
