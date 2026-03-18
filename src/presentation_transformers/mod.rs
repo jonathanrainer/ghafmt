@@ -69,6 +69,19 @@ pub(crate) fn insert_blank_line_before_comment_block(
         return;
     }
 
+    // If there are already two consecutive Linebreaks at the insertion point, a blank line
+    // already exists (e.g. the trailing newlines kept by a `|+` scalar). Inserting another
+    // would produce a double blank line, breaking idempotency.
+    if events
+        .get(insertion_point)
+        .is_some_and(|e| e.write_type == WriteType::Linebreak)
+        && events
+            .get(insertion_point + 1)
+            .is_some_and(|e| e.write_type == WriteType::Linebreak)
+    {
+        return;
+    }
+
     events.insert(
         insertion_point,
         EmitEvent {
@@ -128,6 +141,19 @@ mod tests {
         vec![ev(Comment, "# top"), ev(Linebreak, "\n"), ev(PlainScalarKey, "name")],
         0, 2,
         vec![ev(Comment, "# top"), ev(Linebreak, "\n"), ev(PlainScalarKey, "name")],
+    )]
+    #[case::no_insert_when_blank_line_already_exists(
+        // Two consecutive Linebreaks already form a blank line (e.g. from a |+ scalar).
+        // A third must not be inserted.
+        vec![ev(PlainScalar, "v1"), ev(Linebreak, "\n"), ev(Linebreak, "\n"), ev(PlainScalar, "v2")],
+        0, 3,
+        vec![ev(PlainScalar, "v1"), ev(Linebreak, "\n"), ev(Linebreak, "\n"), ev(PlainScalar, "v2")],
+    )]
+    #[case::no_insert_when_blank_line_exists_before_comment(
+        // Blank line already exists before a standalone comment block.
+        vec![ev(PlainScalar, "v1"), ev(Linebreak, "\n"), ev(Linebreak, "\n"), ev(Comment, "# c"), ev(Linebreak, "\n"), ev(PlainScalar, "v2")],
+        0, 5,
+        vec![ev(PlainScalar, "v1"), ev(Linebreak, "\n"), ev(Linebreak, "\n"), ev(Comment, "# c"), ev(Linebreak, "\n"), ev(PlainScalar, "v2")],
     )]
     fn test_insert_blank_line(
         #[case] mut input: Vec<EmitEvent>,
