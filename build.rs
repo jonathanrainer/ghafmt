@@ -1,11 +1,5 @@
 fn main() {
     let version = std::env::var("CARGO_PKG_VERSION").unwrap_or_default();
-    let metadata = std::env::var("GHAFMT_BUILD_METADATA").unwrap_or_default();
-    let version_string = if metadata.is_empty() {
-        version
-    } else {
-        format!("{version}-{metadata}")
-    };
-    println!("cargo:rustc-env=GHAFMT_VERSION_STRING={version_string}");
-    println!("cargo:rerun-if-env-changed=GHAFMT_BUILD_METADATA");
+    let display = version.split_once('-').map_or(version.as_str(), |(_, pre)| pre);
+    println!("cargo:rustc-env=GHAFMT_VERSION_STRING={display}");
 }
