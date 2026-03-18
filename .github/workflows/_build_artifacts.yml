@@ -76,12 +76,13 @@ jobs:
         shell: bash
 
       - name: Package artifact
-        if: runner.os != 'Windows'
         run: tar -czf "${{ steps.version.outputs.prefix }}-${{ matrix.target }}.tar.gz" -C "target/${{ matrix.target }}/release" ghafmt
 
-      - name: Package artifact
-        if: runner.os == 'Windows'
-        run: Compress-Archive -Path "target\${{ matrix.target }}\release\ghafmt.exe" -DestinationPath "${{ steps.version.outputs.prefix }}-${{ matrix.target }}.zip"
+      - name: Compute checksum
+        run: |
+          sha256sum "${{ steps.version.outputs.prefix }}-${{ matrix.target }}.tar.gz" \
+            | awk '{print $1}' \
+            > "${{ steps.version.outputs.prefix }}-${{ matrix.target }}.tar.gz.sha256"
 
       - name: Upload artifact
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0

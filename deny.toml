@@ -1,7 +1,8 @@
 [advisories]
 version = 2
 db-urls = ["https://github.com/rustsec/advisory-db"]
-# git2 0.18.3 is pinned by fyaml-sys (build-time only, not in the shipped binary)
+# git2 0.18.3 is pinned by fyaml-sys (build-time only, not in the shipped binary).
+# Remove this suppression once fyaml-sys upgrades its git2 dependency.
 ignore = ["RUSTSEC-2026-0008"]
 
 [licenses]
@@ -16,6 +17,8 @@ allow = [
 ]
 
 [bans]
+# fyaml and fyaml-sys pull in some duplicated transitive deps; allow until they
+# publish stable crates.io releases and the [patch] block can be removed.
 multiple-versions = "allow"
 
 [sources]

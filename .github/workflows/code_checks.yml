@@ -45,8 +45,17 @@ jobs:
 
       - name: Install actionlint
         run: |
-          bash <(curl -Ls https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
-          sudo mv ./actionlint /usr/local/bin/actionlint
+          TARBALL="actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          BASE_URL="https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}"
+          curl -fsSL "${BASE_URL}/${TARBALL}" -o /tmp/actionlint.tar.gz
+          EXPECTED=$(curl -fsSL "${BASE_URL}/actionlint_${ACTIONLINT_VERSION}_checksums.txt" \
+            | grep "${TARBALL}" | awk '{print $1}')
+          echo "${EXPECTED}  /tmp/actionlint.tar.gz" | sha256sum --check
+          tar -xzf /tmp/actionlint.tar.gz -C /tmp actionlint
+          sudo mv /tmp/actionlint /usr/local/bin/actionlint
+        env:
+          # renovate: datasource=github-releases depName=rhysd/actionlint
+          ACTIONLINT_VERSION: 1.7.11
 
       - name: Run tests
         run: cargo test

@@ -17,11 +17,12 @@ clap = { version = "=4.6.0", features = ["derive"] }
 fyaml = "=0.5.0"
 miette = { version = "=7.6.0", features = ["fancy"] }
 thiserror = "=2.0.18"
-similar = "2.7.0"
+similar = "=2.7.0"
 tracing = "=0.1.44"
 tracing-subscriber = "=0.3.23"
 regex = "=1.12.3"
 walkdir = "=2.5.0"
+tempfile = "=3.27.0"
 
 [lints.clippy]
 pedantic = "warn"
@@ -38,6 +39,6 @@ similar-asserts = "=1.7.0"
 tempfile = "=3.27.0"
 
 [patch.crates-io]
-fyaml = { git = "https://github.com/jonathanrainer/fyaml", branch = "integration" }
-fyaml-sys = { git = "https://github.com/jonathanrainer/fyaml-sys", branch = "integration" }
+fyaml = { git = "https://github.com/jonathanrainer/fyaml", rev = "c4b0b3d8f304eb99c447e3254ea296b163c80e3e" }
+fyaml-sys = { git = "https://github.com/jonathanrainer/fyaml-sys", rev = "83756ad4ee1e2937859b03465d70bafb24597a9b" }
 

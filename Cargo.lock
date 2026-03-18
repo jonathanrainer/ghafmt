@@ -377,7 +377,7 @@ dependencies = [
 [[package]]
 name = "fyaml"
 version = "0.5.0"
-source = "git+https://github.com/jonathanrainer/fyaml?branch=integration#c4b0b3d8f304eb99c447e3254ea296b163c80e3e"
+source = "git+https://github.com/jonathanrainer/fyaml?rev=c4b0b3d8f304eb99c447e3254ea296b163c80e3e#c4b0b3d8f304eb99c447e3254ea296b163c80e3e"
 dependencies = [
  "fyaml-sys",
  "indexmap",
@@ -389,7 +389,7 @@ dependencies = [
 [[package]]
 name = "fyaml-sys"
 version = "0.1.1-alpha.1+fy0.9.3-16-ged4720d"
-source = "git+https://github.com/jonathanrainer/fyaml-sys?branch=integration#83756ad4ee1e2937859b03465d70bafb24597a9b"
+source = "git+https://github.com/jonathanrainer/fyaml-sys?rev=83756ad4ee1e2937859b03465d70bafb24597a9b#83756ad4ee1e2937859b03465d70bafb24597a9b"
 dependencies = [
  "bindgen",
  "cc",

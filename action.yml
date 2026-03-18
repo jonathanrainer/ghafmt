@@ -45,7 +45,15 @@ runs:
         esac
 
         URL="https://github.com/jonathanrainer/ghafmt/releases/download/v${VERSION}/ghafmt-${VERSION}-${TARGET}.tar.gz"
-        curl -fsSL "$URL" | tar -xz -C "$RUNNER_TEMP"
+        TARBALL="${RUNNER_TEMP}/ghafmt.tar.gz"
+        curl -fsSL "$URL" -o "$TARBALL"
+        EXPECTED=$(curl -fsSL "${URL}.sha256" | tr -d '[:space:]')
+        ACTUAL=$(sha256sum "$TARBALL" | awk '{print $1}')
+        if [ "$EXPECTED" != "$ACTUAL" ]; then
+          echo "::error::SHA-256 checksum mismatch for ghafmt binary (expected ${EXPECTED}, got ${ACTUAL})"
+          exit 1
+        fi
+        tar -xz -C "$RUNNER_TEMP" -f "$TARBALL"
         echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
 
     - name: Run ghafmt
