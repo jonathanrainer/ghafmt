@@ -10,20 +10,21 @@ jobs:
     name: Compute Build Metadata
     runs-on: ubuntu-latest
     outputs:
-      build_metadata: ${{ steps.meta.outputs.build_metadata }}
+      version: ${{ steps.version.outputs.version }}
     steps:
-      - id: meta
+      - name: Compute nightly version
+        id: version
         run: |
           DATE=$(date -u +%Y%m%d)
           SHA=$(echo "${{ github.sha }}" | cut -c1-7)
-          echo "build_metadata=nightly.${DATE}.${SHA}" >> "$GITHUB_OUTPUT"
+          echo "version=0.0.0-nightly.${DATE}.${SHA}" >> "$GITHUB_OUTPUT"
 
   build_artifacts:
     name: Build Artifacts
     needs: setup
     uses: ./.github/workflows/_build_artifacts.yml
     with:
-      build_metadata: ${{ needs.setup.outputs.build_metadata }}
+      version: ${{ needs.setup.outputs.version }}
       retention_days: 7
 
   build_docker:
@@ -34,9 +35,9 @@ jobs:
       packages: write
     uses: ./.github/workflows/_build_docker.yml
     with:
-      version: nightly
+      image_tag: nightly
       tag_latest: false
-      build_metadata: ${{ needs.setup.outputs.build_metadata }}
+      version: ${{ needs.setup.outputs.version }}
 
   publish_nightly:
     name: Publish Nightly Release
@@ -45,9 +46,11 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+      - name: Download artifacts
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           merge-multiple: true
           path: artifacts
@@ -61,7 +64,7 @@ jobs:
         run: |
           gh release create nightly artifacts/* \
             --prerelease \
-            --title "Nightly Build (${{ needs.setup.outputs.build_metadata }})" \
+            --title "Nightly Build (${{ needs.setup.outputs.version }})" \
             --notes "Automated nightly build from \`${{ github.sha }}\`.
 
           ## Docker Image
