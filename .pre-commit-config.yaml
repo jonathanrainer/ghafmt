@@ -1,0 +1,28 @@
+repos:
+  - repo: local
+    hooks:
+      - id: clippy
+        name: clippy
+        language: system
+        entry: cargo clippy --all-targets --all-features -- -D warnings
+        pass_filenames: false
+        types: [rust]
+
+      - id: cargo-deny
+        name: cargo deny
+        language: system
+        entry: cargo deny check
+        pass_filenames: false
+        files: ^(Cargo\.(toml|lock)|deny\.toml)$
+
+      - id: ghafmt
+        name: ghafmt
+        language: system
+        entry: cargo run --quiet -- --check
+        pass_filenames: false
+        files: ^\.github/workflows/
+
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.7.11
+    hooks:
+      - id: actionlint
