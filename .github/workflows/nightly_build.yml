@@ -8,7 +8,7 @@ on:
 jobs:
   setup:
     name: Compute Build Metadata
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       version: ${{ steps.version.outputs.version }}
     steps:
@@ -42,7 +42,7 @@ jobs:
   publish_nightly:
     name: Publish Nightly Release
     needs: [build_artifacts, build_docker, setup]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
     steps:

@@ -25,9 +25,9 @@ jobs:
         # expressions, mmap, and POSIX headers with no _WIN32 guards — this
         # requires upstream changes to libfyaml, not just fyaml-sys.
         include:
-          - os: macos-latest
+          - os: macos-15
             target: aarch64-apple-darwin
-          - os: ubuntu-latest
+          - os: ubuntu-24.04
             target: x86_64-unknown-linux-musl
           - os: ubuntu-24.04-arm
             target: aarch64-unknown-linux-musl
