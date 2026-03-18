@@ -3,54 +3,62 @@ name: Build Docker Image
 on:
   workflow_call:
     inputs:
-      build_metadata:
-        description: "Forwarded as GHAFMT_BUILD_METADATA build-arg (e.g. nightly.20260315.abc1234)"
+      image_tag:
+        description: "Docker image tag, e.g. 0.2.0 or nightly"
         type: string
-        required: false
-        default: ""
+        required: true
       tag_latest:
         description: "Also push :latest tag"
         type: boolean
         required: false
         default: false
       version:
-        description: "Tag suffix, e.g. 0.2.0 or nightly"
+        description: "Version to set in Cargo.toml before building (e.g. 0.0.0-nightly.20260315.abc1234)"
         type: string
-        required: true
+        required: false
+        default: ""
 
 jobs:
-  build_and_push:
-    name: Build and Push
+  build:
+    name: Build Image
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
-      - uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
+      - name: Set Cargo version
+        if: inputs.version != ''
+        uses: ./.github/actions/set-cargo-version
+        with:
+          version: ${{ inputs.version }}
 
-      - uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
         with:
           password: ${{ secrets.GITHUB_TOKEN }}
           registry: ghcr.io
           username: ${{ github.actor }}
 
-      - id: meta
+      - name: Extract Docker metadata
+        id: meta
         uses: docker/metadata-action@030e881283bb7a6894de51c315a6bfe6a94e05cf # v6.0.0
         with:
           images: ghcr.io/${{ github.repository }}
-          labels: |
-            org.opencontainers.image.version=${{ inputs.build_metadata != '' && inputs.build_metadata || inputs.version }}
           tags: |
-            type=raw,value=${{ inputs.version }}
+            type=raw,value=${{ inputs.image_tag }}
             type=raw,value=latest,enable=${{ inputs.tag_latest }}
 
-      - uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294 # v7.0.0
+      - name: Build and push image
+        uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294 # v7.0.0
         with:
-          build-args: GHAFMT_BUILD_METADATA=${{ inputs.build_metadata }}
           context: .
           labels: ${{ steps.meta.outputs.labels }}
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}

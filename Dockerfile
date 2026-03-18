@@ -1,8 +1,6 @@
-ARG GHAFMT_BUILD_METADATA=""
+ARG TARGETARCH
 
-FROM messense/rust-musl-cross:x86_64-musl AS builder
-
-ARG GHAFMT_BUILD_METADATA
+FROM --platform=$BUILDPLATFORM ghcr.io/rust-cross/rust-musl-cross:${TARGETARCH}-musl AS builder
 
 RUN apt-get update && apt-get install -y --no-install-recommends libssl-dev pkg-config \
     && rm -rf /var/lib/apt/lists/*
@@ -10,8 +8,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends libssl-dev pkg-
 WORKDIR /src
 COPY . .
 
-RUN GHAFMT_BUILD_METADATA=${GHAFMT_BUILD_METADATA} cargo build --release --target x86_64-unknown-linux-musl
+# CARGO_BUILD_TARGET and RUST_MUSL_CROSS_TARGET are set by the rust-cross image.
+# Copy the binary to a fixed path so the scratch stage doesn't need to know the target.
+RUN cargo build --release \
+    && cp "target/${RUST_MUSL_CROSS_TARGET}/release/ghafmt" /ghafmt
 
 FROM scratch
-COPY --from=builder /src/target/x86_64-unknown-linux-musl/release/ghafmt /ghafmt
+COPY --from=builder /ghafmt /ghafmt
 ENTRYPOINT ["/ghafmt"]

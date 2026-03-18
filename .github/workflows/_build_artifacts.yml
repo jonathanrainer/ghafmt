@@ -3,16 +3,15 @@ name: Build Artifacts
 on:
   workflow_call:
     inputs:
-      build_metadata:
-        description: "Build label injected into the binary and artifact names (e.g. nightly.20260315.abc1234)"
-        type: string
-        required: false
-        default: ""
       retention_days:
         description: "Number of days to retain uploaded artifacts"
         type: number
         required: false
         default: 90
+      version:
+        description: "Version to set in Cargo.toml before building (e.g. 0.0.0-nightly.20260315.abc1234)"
+        type: string
+        required: true
 
 jobs:
   build_artifacts:
@@ -21,11 +20,6 @@ jobs:
     strategy:
       matrix:
         # We'd like to include other architectures too, however:
-        # - aarch64-unknown-linux-musl is excluded until fyaml-sys compiles for
-        # that target (tracked for v2). On ARM64 Linux, C `char` is unsigned
-        # so bindgen emits `*const u8`, but the fyaml wrapper hardcodes
-        # `*const i8` casts — causing type mismatch errors at compile time.
-        #
         # - x86_64-pc-windows-msvc is excluded until libfyaml compiles cleanly
         # under MSVC (tracked for v3). The C sources use GNU statement
         # expressions, mmap, and POSIX headers with no _WIN32 guards — this
@@ -35,52 +29,60 @@ jobs:
             target: aarch64-apple-darwin
           - os: ubuntu-latest
             target: x86_64-unknown-linux-musl
+          - os: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-musl
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
-      - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
+      - name: Set up Rust cache
+        uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
 
-      - run: rustup target add ${{ matrix.target }}
+      - name: Add Rust target
+        run: rustup target add ${{ matrix.target }}
 
-      - if: runner.os == 'Linux'
+      - name: Set up Zig
+        if: runner.os == 'Linux'
         uses: mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29 # v2.2.1
         with:
           version: latest
 
-      - if: runner.os == 'Linux'
+      - name: Install cargo-zigbuild
+        if: runner.os == 'Linux'
         uses: taiki-e/install-action@94a7388bec5d4c8dd93e3ebf09e0ff448f3f6f4d # v2.68.35
         with:
           tool: cargo-zigbuild
 
-      - if: runner.os == 'Linux'
+      - name: Build
+        if: runner.os == 'Linux'
         run: cargo zigbuild --release --target ${{ matrix.target }}
-        env:
-          GHAFMT_BUILD_METADATA: ${{ inputs.build_metadata }}
 
-      - if: runner.os != 'Linux'
+      - name: Build
+        if: runner.os != 'Linux'
         run: cargo build --release --target ${{ matrix.target }}
-        env:
-          GHAFMT_BUILD_METADATA: ${{ inputs.build_metadata }}
 
-      - id: version
+      - name: Set Cargo version
+        uses: ./.github/actions/set-cargo-version
+        with:
+          version: ${{ inputs.version }}
+
+      - name: Compute artifact prefix
+        id: version
         run: |
           VERSION=$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[0].version')
-          METADATA="${{ inputs.build_metadata }}"
-          if [ -n "$METADATA" ]; then
-            echo "prefix=ghafmt-${METADATA}" >> "$GITHUB_OUTPUT"
-          else
-            echo "prefix=ghafmt-${VERSION}" >> "$GITHUB_OUTPUT"
-          fi
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "prefix=ghafmt-${VERSION#*-}" >> "$GITHUB_OUTPUT"
         shell: bash
 
-      - if: runner.os != 'Windows'
+      - name: Package artifact
+        if: runner.os != 'Windows'
         run: tar -czf "${{ steps.version.outputs.prefix }}-${{ matrix.target }}.tar.gz" -C "target/${{ matrix.target }}/release" ghafmt
 
-      - if: runner.os == 'Windows'
+      - name: Package artifact
+        if: runner.os == 'Windows'
         run: Compress-Archive -Path "target\${{ matrix.target }}\release\ghafmt.exe" -DestinationPath "${{ steps.version.outputs.prefix }}-${{ matrix.target }}.zip"
 
-      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+      - name: Upload artifact
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: ${{ steps.version.outputs.prefix }}-${{ matrix.target }}
           path: ${{ steps.version.outputs.prefix }}-${{ matrix.target }}.*
