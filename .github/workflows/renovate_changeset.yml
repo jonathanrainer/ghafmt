@@ -19,8 +19,7 @@ jobs:
 
       - name: Create changeset
         run: |
-          SLUG=$(echo "$HEAD_REF" | sed 's/[^a-zA-Z0-9]/_/g' | tr '[:upper:]' '[:lower:]')
-          FILE=".changeset/${SLUG}.md"
+          FILE=".changeset/renovate_pr_${PR_NUMBER}.md"
           if [ ! -f "$FILE" ]; then
             printf -- '---\ndefault: dependencies\n---\n\n%s\n' \
               "$PR_TITLE" > "$FILE"
@@ -31,5 +30,5 @@ jobs:
             git push
           fi
         env:
-          HEAD_REF: ${{ github.head_ref }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
           PR_TITLE: ${{ github.event.pull_request.title }}
