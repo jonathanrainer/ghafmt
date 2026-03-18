@@ -1,0 +1,56 @@
+name: ghafmt
+description: Format GitHub Actions workflow files
+author: jonathanrainer
+branding:
+  icon: check-square
+  color: blue
+
+inputs:
+  path:
+    description: Path to workflow file(s) or directory to format
+    required: false
+    default: .github/workflows/
+  mode:
+    description: 'Mode to run: check, write, or list'
+    required: false
+    default: check
+  version:
+    description: Release version to download (e.g. 0.2.0). Defaults to latest release.
+    required: false
+    default: latest
+
+runs:
+  using: composite
+  steps:
+    - name: Download ghafmt
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        INPUT_VERSION: ${{ inputs.version }}
+      run: |
+        VERSION="$INPUT_VERSION"
+        if [ "$VERSION" = "latest" ]; then
+          VERSION=$(gh api repos/jonathanrainer/ghafmt/releases/latest --jq '.tag_name' | sed 's/^v//')
+        fi
+
+        case "${{ runner.os }}-${{ runner.arch }}" in
+          Linux-X64)   TARGET="x86_64-unknown-linux-musl" ;;
+          Linux-ARM64) TARGET="aarch64-unknown-linux-musl" ;;
+          macOS-ARM64) TARGET="aarch64-apple-darwin" ;;
+          macOS-X64)   TARGET="x86_64-apple-darwin" ;;
+          *)
+            echo "::error::Unsupported platform: ${{ runner.os }}-${{ runner.arch }}"
+            exit 1
+            ;;
+        esac
+
+        URL="https://github.com/jonathanrainer/ghafmt/releases/download/v${VERSION}/ghafmt-${VERSION}-${TARGET}.tar.gz"
+        curl -fsSL "$URL" | tar -xz -C "$RUNNER_TEMP"
+        echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
+
+    - name: Run ghafmt
+      shell: bash
+      env:
+        INPUT_MODE: ${{ inputs.mode }}
+        INPUT_PATH: ${{ inputs.path }}
+      run: ghafmt "--${INPUT_MODE}" "${INPUT_PATH}"
