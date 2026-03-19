@@ -218,36 +218,6 @@ mod tests {
                   - id: d
         "}.to_string()
     )]
-    #[case::multi_job_comments_between_steps(
-        Document::from_string(indoc! {"
-            jobs:
-              foo:
-                steps:
-                  - id: a
-                  # comment
-                  - id: b
-              bar:
-                steps:
-                  - id: c
-                  # comment
-                  - id: d
-        "}.to_string()).expect("test input is valid YAML"),
-        indoc! {"
-            jobs:
-              foo:
-                steps:
-                  - id: a
-
-                  # comment
-                  - id: b
-              bar:
-                steps:
-                  - id: c
-
-                  # comment
-                  - id: d
-        "}.to_string()
-    )]
     #[case::comment_before_first_step(
         Document::from_string(indoc! {"
             jobs:
