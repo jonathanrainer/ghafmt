@@ -370,7 +370,7 @@ impl CaseEnforcer {
     }
 
     /// Convert a set of renames in a list of renames we need to make
-    fn classify_renames(&self, renames: &Vec<Rename>) -> Vec<HashMap<String, String>> {
+    fn classify_renames(&self, renames: &[Rename]) -> Vec<HashMap<String, String>> {
         let mut ref_renames: Vec<HashMap<String, String>> =
             vec![HashMap::new(); self.ref_kinds.len()];
         for rename in renames {

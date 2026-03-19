@@ -65,7 +65,7 @@ pub(crate) trait StructureTransformer {
         &self,
         mut workflow_document: Document,
         root_path: &str,
-        key_ordering: &Vec<String>,
+        key_ordering: &[String],
     ) -> fyaml::Result<Document> {
         if workflow_document
             .at_path(root_path)

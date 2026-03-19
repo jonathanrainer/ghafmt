@@ -7,21 +7,31 @@ use crate::structure_transformers::{StructureTransformer, for_each_mapping_child
 const CONTAINER_ORDERING: [&str; 6] =
     ["image", "credentials", "env", "ports", "volumes", "options"];
 
-#[derive(Default)]
 /// Sorts keys under `container` and `services` within a job into idiomatic order.
-pub(crate) struct ContainerSorter {}
+pub(crate) struct ContainerSorter {
+    /// Pre-computed key ordering to avoid allocating on every call.
+    key_ordering: Vec<String>,
+}
+
+impl Default for ContainerSorter {
+    fn default() -> Self {
+        Self {
+            key_ordering: CONTAINER_ORDERING.map(String::from).to_vec(),
+        }
+    }
+}
 
 impl StructureTransformer for ContainerSorter {
     fn process(&self, mut doc: Document) -> fyaml::Result<Document> {
-        let order = CONTAINER_ORDERING.map(String::from).to_vec();
         // For each job, sort the mapping under the key 'container', then also sort each of
         // the services under the key 'services'
         //
         // Both of those keys expose either a Container, or a list of Containers
         doc = for_each_mapping_child(doc, "jobs", |doc, job_path| {
-            let doc = self.sort_mapping_at_path(doc, &format!("{job_path}/container"), &order)?;
+            let doc =
+                self.sort_mapping_at_path(doc, &format!("{job_path}/container"), &self.key_ordering)?;
             for_each_mapping_child(doc, &format!("{job_path}/services"), |doc, service_path| {
-                self.sort_mapping_at_path(doc, service_path, &order)
+                self.sort_mapping_at_path(doc, service_path, &self.key_ordering)
             })
         })?;
         Ok(doc)

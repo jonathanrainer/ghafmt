@@ -27,15 +27,24 @@ const JOB_LEVEL_KEY_ORDERING: [&str; 20] = [
     "steps",
 ];
 
-#[derive(Default)]
 /// Sorts the keys of each job into the canonical GHA ordering.
-pub(crate) struct JobSorter {}
+pub(crate) struct JobSorter {
+    /// Pre-computed key ordering to avoid allocating on every call.
+    key_ordering: Vec<String>,
+}
+
+impl Default for JobSorter {
+    fn default() -> Self {
+        Self {
+            key_ordering: JOB_LEVEL_KEY_ORDERING.map(String::from).to_vec(),
+        }
+    }
+}
 
 impl StructureTransformer for JobSorter {
     fn process(&self, mut doc: Document) -> fyaml::Result<Document> {
-        let order = JOB_LEVEL_KEY_ORDERING.map(String::from).to_vec();
         doc = for_each_mapping_child(doc, "/jobs", |doc, job_path| {
-            let doc = self.sort_mapping_at_path(doc, job_path, &order)?;
+            let doc = self.sort_mapping_at_path(doc, job_path, &self.key_ordering)?;
             let doc =
                 self.sort_path_to_mapping_alphabetically(doc, &format!("{job_path}/outputs"))?;
             self.sort_path_to_mapping_alphabetically(doc, &format!("{job_path}/secrets"))

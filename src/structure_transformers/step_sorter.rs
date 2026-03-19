@@ -20,16 +20,25 @@ const STEP_LEVEL_KEY_ORDERING: [&str; 11] = [
     "continue-on-error",
 ];
 
-#[derive(Default)]
 /// Sorts the keys of each step into the canonical GHA ordering.
-pub(crate) struct StepSorter {}
+pub(crate) struct StepSorter {
+    /// Pre-computed key ordering to avoid allocating on every call.
+    key_ordering: Vec<String>,
+}
+
+impl Default for StepSorter {
+    fn default() -> Self {
+        Self {
+            key_ordering: STEP_LEVEL_KEY_ORDERING.map(String::from).to_vec(),
+        }
+    }
+}
 
 impl StructureTransformer for StepSorter {
     fn process(&self, mut doc: Document) -> fyaml::Result<Document> {
-        let order = STEP_LEVEL_KEY_ORDERING.map(String::from).to_vec();
         doc = for_each_mapping_child(doc, "/jobs", |doc, job_path| {
             for_each_seq_element(doc, &format!("{job_path}/steps"), |doc, step_path| {
-                self.sort_mapping_at_path(doc, step_path, &order)
+                self.sort_mapping_at_path(doc, step_path, &self.key_ordering)
             })
         })?;
         Ok(doc)

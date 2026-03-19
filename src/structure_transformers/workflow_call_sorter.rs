@@ -10,6 +10,8 @@ use crate::{
 
 /// Sorts `workflow_call` entries idiomatically and then alphabetically.
 pub(crate) struct WorkflowCallSorter {
+    /// Pre-computed top-level key ordering to avoid allocating on every call.
+    workflow_key_order: Vec<String>,
     /// A map that defines a key that can be found under "`workflow_call`" and the
     /// order its sub-keys should have.
     order_map: HashMap<String, Vec<String>>,
@@ -18,6 +20,7 @@ pub(crate) struct WorkflowCallSorter {
 impl Default for WorkflowCallSorter {
     fn default() -> Self {
         WorkflowCallSorter {
+            workflow_key_order: WORKFLOW_KEYS.map(String::from).to_vec(),
             order_map: HashMap::from([
                 ("inputs".to_string(), INPUT_ORDER.map(String::from).to_vec()),
                 (
@@ -36,11 +39,7 @@ impl Default for WorkflowCallSorter {
 impl StructureTransformer for WorkflowCallSorter {
     fn process(&self, mut doc: Document) -> fyaml::Result<Document> {
         // Sort the entries under 'workflow_call' first
-        doc = self.sort_mapping_at_path(
-            doc,
-            "/on/workflow_call",
-            &WORKFLOW_KEYS.map(String::from).to_vec(),
-        )?;
+        doc = self.sort_mapping_at_path(doc, "/on/workflow_call", &self.workflow_key_order)?;
         // Then for each of the keys under 'workflow_call' sort their children alphabetically
         doc = for_each_mapping_child(doc, "/on/workflow_call", |doc, child_path| {
             self.sort_path_to_mapping_alphabetically(doc, child_path)

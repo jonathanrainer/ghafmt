@@ -6,9 +6,20 @@ use crate::structure_transformers::{StructureTransformer, for_each_mapping_child
 /// Canonical key order within a `runs-on` mapping (group-runner form).
 const RUNS_ON_KEYS: [&str; 2] = ["group", "labels"];
 
-#[derive(Default)]
 /// Sorts all `runs-on` entries, appropriate to their underlying YAML type.
-pub(crate) struct RunsOnSorter {}
+pub(crate) struct RunsOnSorter {
+    /// Pre-computed key ordering to avoid allocating on every call.
+    key_ordering: Vec<String>,
+}
+
+impl Default for RunsOnSorter {
+    fn default() -> Self {
+        Self {
+            key_ordering: RUNS_ON_KEYS.map(String::from).to_vec(),
+        }
+    }
+}
+
 impl StructureTransformer for RunsOnSorter {
     fn process(&self, mut doc: Document) -> fyaml::Result<Document> {
         doc = for_each_mapping_child(doc, "jobs", |doc, job_path| {
@@ -18,11 +29,9 @@ impl StructureTransformer for RunsOnSorter {
                 Some(NodeType::Sequence) => {
                     self.sort_seq_at_path_alphabetically(doc, &job_runs_on_path)
                 }
-                Some(NodeType::Mapping) => self.sort_mapping_at_path(
-                    doc,
-                    &job_runs_on_path,
-                    &RUNS_ON_KEYS.map(String::from).to_vec(),
-                ),
+                Some(NodeType::Mapping) => {
+                    self.sort_mapping_at_path(doc, &job_runs_on_path, &self.key_ordering)
+                }
                 _ => Ok(doc),
             }
         })?;

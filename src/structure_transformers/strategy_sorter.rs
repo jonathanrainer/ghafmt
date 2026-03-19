@@ -7,12 +7,22 @@ use crate::structure_transformers::{
     StructureTransformer, for_each_mapping_child, for_each_seq_element,
 };
 
-#[derive(Default)]
-/// Sorts keys under `strategy` within a job, including matrix dimension sorting.
-pub(crate) struct StrategySorter;
-
 /// Canonical key order within a `strategy` mapping.
 const STRATEGY_ORDER: [&str; 3] = ["fail-fast", "max-parallel", "matrix"];
+
+/// Sorts keys under `strategy` within a job, including matrix dimension sorting.
+pub(crate) struct StrategySorter {
+    /// Pre-computed key ordering to avoid allocating on every call.
+    strategy_ordering: Vec<String>,
+}
+
+impl Default for StrategySorter {
+    fn default() -> Self {
+        Self {
+            strategy_ordering: STRATEGY_ORDER.map(String::from).to_vec(),
+        }
+    }
+}
 
 impl StructureTransformer for StrategySorter {
     #[allow(clippy::match_same_arms, clippy::unwrap_used)]
@@ -27,11 +37,7 @@ impl StructureTransformer for StrategySorter {
 
             let matrix_path = format!("{strategy_path}/matrix");
 
-            doc = self.sort_mapping_at_path(
-                doc,
-                &strategy_path,
-                &STRATEGY_ORDER.map(String::from).to_vec(),
-            )?;
+            doc = self.sort_mapping_at_path(doc, &strategy_path, &self.strategy_ordering)?;
 
             // Sort matrix keys: custom dimension keys alphabetically, include/exclude last
             doc.edit().sort_mapping_at(&matrix_path, |k1, _, k2, _| {
@@ -264,7 +270,7 @@ mod tests {
         "}.to_string()
     )]
     fn test_strategy_sorter(#[case] source_doc: Document, #[case] expected: String) {
-        let result = StrategySorter
+        let result = StrategySorter::default()
             .process(source_doc)
             .expect("processing failed")
             .to_string();

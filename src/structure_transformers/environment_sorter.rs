@@ -3,12 +3,22 @@ use fyaml::Document;
 
 use crate::structure_transformers::{StructureTransformer, for_each_mapping_child};
 
-#[derive(Default)]
-/// Sorts the keys under the job-level `environment` mapping into idiomatic order.
-pub(crate) struct EnvironmentSorter;
-
 /// Canonical key order within a job-level `environment` mapping.
 const ENVIRONMENT_ORDERING: [&str; 2] = ["name", "url"];
+
+/// Sorts the keys under the job-level `environment` mapping into idiomatic order.
+pub(crate) struct EnvironmentSorter {
+    /// Pre-computed key ordering to avoid allocating on every call.
+    key_ordering: Vec<String>,
+}
+
+impl Default for EnvironmentSorter {
+    fn default() -> Self {
+        Self {
+            key_ordering: ENVIRONMENT_ORDERING.map(String::from).to_vec(),
+        }
+    }
+}
 
 impl StructureTransformer for EnvironmentSorter {
     fn process(&self, mut doc: Document) -> fyaml::Result<Document> {
@@ -16,7 +26,7 @@ impl StructureTransformer for EnvironmentSorter {
             self.sort_mapping_at_path(
                 doc,
                 &format!("{job_path}/environment"),
-                &ENVIRONMENT_ORDERING.map(String::from).to_vec(),
+                &self.key_ordering,
             )
         })?;
         Ok(doc)
@@ -122,7 +132,7 @@ mod tests {
         "}.to_string()
     )]
     fn test_environment_sorter(#[case] source_doc: Document, #[case] expected: String) {
-        let result = EnvironmentSorter
+        let result = EnvironmentSorter::default()
             .process(source_doc)
             .expect("processing failed")
             .to_string();

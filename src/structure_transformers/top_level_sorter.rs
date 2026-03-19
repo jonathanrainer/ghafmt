@@ -3,13 +3,23 @@ use fyaml::Document;
 
 use crate::{constants::TOP_LEVEL_KEY_ORDERING, structure_transformers::StructureTransformer};
 
-#[derive(Default)]
 /// Sorts the top-level workflow keys into the canonical GHA ordering.
-pub(crate) struct TopLevelSorter {}
+pub(crate) struct TopLevelSorter {
+    /// Pre-computed key ordering to avoid allocating on every call.
+    key_ordering: Vec<String>,
+}
+
+impl Default for TopLevelSorter {
+    fn default() -> Self {
+        Self {
+            key_ordering: TOP_LEVEL_KEY_ORDERING.map(String::from).to_vec(),
+        }
+    }
+}
 
 impl StructureTransformer for TopLevelSorter {
     fn process(&self, doc: Document) -> fyaml::Result<Document> {
-        self.sort_mapping_at_path(doc, "", &TOP_LEVEL_KEY_ORDERING.map(String::from).to_vec())
+        self.sort_mapping_at_path(doc, "", &self.key_ordering)
     }
 
     fn name(&self) -> &'static str {
