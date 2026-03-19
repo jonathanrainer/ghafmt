@@ -67,7 +67,7 @@ impl Ghafmt {
 
     #[must_use]
     pub fn run(
-        mut self,
+        &mut self,
         files: Vec<InputArg>,
         mode: Mode,
         colour_mode: ColourMode,
