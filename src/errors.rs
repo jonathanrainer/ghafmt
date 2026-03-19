@@ -1,7 +1,4 @@
 //! Structured error and diagnostic types for `ghafmt`.
-// thiserror/miette derive macros generate match arms that bind struct fields;
-// the compiler incorrectly fires `unused_assignments` on those bindings.
-#![allow(unused_assignments)]
 use std::path::PathBuf;
 
 use miette::{Diagnostic, NamedSource, SourceSpan};
