@@ -23,11 +23,7 @@ impl Default for EnvironmentSorter {
 impl StructureTransformer for EnvironmentSorter {
     fn process(&self, mut doc: Document) -> fyaml::Result<Document> {
         doc = for_each_mapping_child(doc, "jobs", |doc, job_path| {
-            self.sort_mapping_at_path(
-                doc,
-                &format!("{job_path}/environment"),
-                &self.key_ordering,
-            )
+            self.sort_mapping_at_path(doc, &format!("{job_path}/environment"), &self.key_ordering)
         })?;
         Ok(doc)
     }

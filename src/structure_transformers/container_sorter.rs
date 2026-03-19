@@ -28,8 +28,11 @@ impl StructureTransformer for ContainerSorter {
         //
         // Both of those keys expose either a Container, or a list of Containers
         doc = for_each_mapping_child(doc, "jobs", |doc, job_path| {
-            let doc =
-                self.sort_mapping_at_path(doc, &format!("{job_path}/container"), &self.key_ordering)?;
+            let doc = self.sort_mapping_at_path(
+                doc,
+                &format!("{job_path}/container"),
+                &self.key_ordering,
+            )?;
             for_each_mapping_child(doc, &format!("{job_path}/services"), |doc, service_path| {
                 self.sort_mapping_at_path(doc, service_path, &self.key_ordering)
             })

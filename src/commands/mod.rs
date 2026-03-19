@@ -26,9 +26,7 @@ use crate::{Error, FormatterResult, Result, Warning, cli::ColourMode};
 pub(crate) fn build_handler(colour: ColourMode) -> GraphicalReportHandler {
     match colour {
         ColourMode::Always => GraphicalReportHandler::new_themed(GraphicalTheme::unicode()),
-        ColourMode::Never => {
-            GraphicalReportHandler::new_themed(GraphicalTheme::unicode_nocolor())
-        }
+        ColourMode::Never => GraphicalReportHandler::new_themed(GraphicalTheme::unicode_nocolor()),
         ColourMode::Auto => {
             if std::env::var_os("NO_COLOR").is_some() {
                 GraphicalReportHandler::new_themed(GraphicalTheme::unicode_nocolor())

@@ -2,7 +2,12 @@ use std::process::ExitCode;
 
 use similar::TextDiff;
 
-use crate::{FormatterResult, cli::ColourMode, commands::{Command, build_handler, render_error}, errors::Result};
+use crate::{
+    FormatterResult,
+    cli::ColourMode,
+    commands::{Command, build_handler, render_error},
+    errors::Result,
+};
 
 /// Compare each result to its original; return 1 if any file differs or errored.
 pub(crate) struct Check {}
@@ -30,8 +35,7 @@ impl Command for Check {
 
         for formatter_result in successes.into_iter().flatten() {
             self.render_warnings(&handler, &formatter_result.warnings, quiet);
-            if formatter_result.original != formatter_result.output
-            {
+            if formatter_result.original != formatter_result.output {
                 eprintln!("--- {:#}", formatter_result.input);
                 eprintln!("+++ {:#}\t(formatted)", formatter_result.input);
                 eprintln!(
@@ -40,7 +44,7 @@ impl Command for Check {
                         formatter_result.original.as_str(),
                         formatter_result.output.as_str()
                     )
-                        .unified_diff()
+                    .unified_diff()
                 );
                 exit_code = ExitCode::FAILURE;
             }

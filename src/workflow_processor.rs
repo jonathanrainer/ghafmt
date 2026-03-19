@@ -136,7 +136,9 @@ mod tests {
         let proc = WorkflowProcessor::new(vec![Box::new(AlwaysFail)]);
         let (_, warnings) = proc.process("a: b\n", "test").expect("process failed");
         assert_eq!(warnings.len(), 1);
-        assert!(matches!(&warnings[0], Warning::StructureTransform { transformer, .. } if *transformer == "always-fail"));
+        assert!(
+            matches!(&warnings[0], Warning::StructureTransform { transformer, .. } if *transformer == "always-fail")
+        );
     }
 
     #[test]
@@ -163,4 +165,3 @@ mod tests {
         assert!(output.contains("after"), "expected 'after' in: {output}");
     }
 }
-

@@ -71,7 +71,6 @@ impl Rename {
     }
 }
 
-
 /// Defines how a category of identifier references is classified, matched, and rewritten.
 struct RefRule {
     /// Matches document paths to determine if a rename belongs to this category.

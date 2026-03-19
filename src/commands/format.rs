@@ -1,6 +1,10 @@
 use std::process::ExitCode;
 
-use crate::{FormatterResult, cli::ColourMode, commands::{Command, build_handler, render_error}};
+use crate::{
+    FormatterResult,
+    cli::ColourMode,
+    commands::{Command, build_handler, render_error},
+};
 
 /// Print each formatted result to stdout; exit 1 immediately on the first error.
 pub(crate) struct Format {}

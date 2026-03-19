@@ -1,6 +1,10 @@
 use std::process::ExitCode;
 
-use crate::{FormatterResult, cli::ColourMode, commands::{Command, build_handler, render_error}};
+use crate::{
+    FormatterResult,
+    cli::ColourMode,
+    commands::{Command, build_handler, render_error},
+};
 
 /// Print the path of each file that differs from its formatted form; return 1 if any do.
 pub(crate) struct List {}
@@ -28,8 +32,7 @@ impl Command for List {
         let mut exit_code = ExitCode::SUCCESS;
 
         for formatter_result in successes.into_iter().flatten() {
-            if formatter_result.original != formatter_result.output
-            {
+            if formatter_result.original != formatter_result.output {
                 println!("{:}", formatter_result.input);
                 exit_code = ExitCode::FAILURE;
             }
