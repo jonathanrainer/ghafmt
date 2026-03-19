@@ -60,7 +60,7 @@ impl Ghafmt {
     #[must_use]
     pub fn new() -> Self {
         Self {
-            workflow_processor: WorkflowProcessor::new(),
+            workflow_processor: WorkflowProcessor::default(),
             workflow_emitter: WorkflowEmitter::new(),
         }
     }
