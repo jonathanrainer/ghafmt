@@ -9,7 +9,7 @@ use crate::presentation_transformers::{
 /// Inserts a blank line before every step (after the first) in each `steps` sequence.
 pub(crate) struct StepsBlankLines {}
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Copy)]
 /// Tracks where in the event stream the current `steps` sequence begins.
 enum State {
     /// No `steps` key has been seen yet.
@@ -37,7 +37,7 @@ impl PresentationTransformer for StepsBlankLines {
             content,
         } in event_stream
         {
-            match ((write_type, content.clone()), state.clone()) {
+            match ((write_type, content.clone()), state) {
                 ((WriteType::Indent, c), _) => indent_level += c.len(),
                 ((WriteType::Linebreak, _), _) => indent_level = 0,
                 ((WriteType::PlainScalarKey, c), _) if c == "steps" && indent_level == 4 => {

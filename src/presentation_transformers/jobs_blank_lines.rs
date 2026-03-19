@@ -9,7 +9,7 @@ use crate::presentation_transformers::{
 /// Inserts a blank line before every job (after the first) in the `jobs` mapping.
 pub(crate) struct JobsBlankLines {}
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Copy)]
 /// Tracks where in the event stream the `jobs` block begins.
 enum State {
     /// No `jobs` key has been seen yet.
@@ -35,7 +35,7 @@ impl PresentationTransformer for JobsBlankLines {
             content,
         } in event_stream
         {
-            match ((write_type, content.clone()), state.clone()) {
+            match ((write_type, content.clone()), state) {
                 ((WriteType::Indent, c), _) => indent_level += c.len(),
                 ((WriteType::Linebreak, _), _) => indent_level = 0,
                 ((WriteType::PlainScalarKey, c), State::Init) if c == "jobs" => {
