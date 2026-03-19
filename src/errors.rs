@@ -180,3 +180,88 @@ fn line_col_to_byte_offset(source: &str, line: u32, col: u32) -> usize {
     }
     source.len()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn source_window_empty_input() {
+        assert_eq!(source_window("", 1, 2), (String::new(), 0));
+    }
+
+    #[test]
+    fn source_window_single_line() {
+        let (window, offset) = source_window("hello", 1, 2);
+        assert_eq!(window, "hello");
+        assert_eq!(offset, 0);
+    }
+
+    #[test]
+    fn source_window_error_in_middle() {
+        let src = "a\nb\nc\nd\ne\nf\ng";
+        // error on line 4 (0-indexed: 3), context 2 → lines 2..=6 (0-indexed 1..=5)
+        let (window, offset) = source_window(src, 4, 2);
+        assert_eq!(window, "b\nc\nd\ne\nf");
+        assert_eq!(offset, 2); // "a\n" = 2 bytes
+    }
+
+    #[test]
+    fn source_window_clamps_at_start() {
+        let src = "a\nb\nc\nd\ne";
+        // error on line 1, context 5 → start clamped to 0
+        let (window, offset) = source_window(src, 1, 5);
+        assert_eq!(window, src);
+        assert_eq!(offset, 0);
+    }
+
+    #[test]
+    fn source_window_clamps_at_end() {
+        let src = "a\nb\nc";
+        // error on line 3, context 5 → end clamped to line count
+        let (window, offset) = source_window(src, 3, 5);
+        assert_eq!(window, src);
+        assert_eq!(offset, 0);
+    }
+
+    #[test]
+    fn source_window_line_past_end_uses_last_line() {
+        let src = "a\nb\nc";
+        let (window, offset) = source_window(src, 99, 1);
+        assert_eq!(window, "b\nc");
+        assert_eq!(offset, 2); // "a\n"
+    }
+
+    #[test]
+    fn line_col_byte_offset_first_line_first_col() {
+        assert_eq!(line_col_to_byte_offset("hello\nworld", 1, 1), 0);
+    }
+
+    #[test]
+    fn line_col_byte_offset_first_line_mid_col() {
+        assert_eq!(line_col_to_byte_offset("hello\nworld", 1, 4), 3);
+    }
+
+    #[test]
+    fn line_col_byte_offset_second_line() {
+        // "hello\n" = 6 bytes, then col 3 = offset 2 within second line → 8
+        assert_eq!(line_col_to_byte_offset("hello\nworld", 2, 3), 8);
+    }
+
+    #[test]
+    fn line_col_byte_offset_col_past_line_end_clamps() {
+        // col 99 on a 5-char line → clamps to end of line (5)
+        assert_eq!(line_col_to_byte_offset("hello\nworld", 1, 99), 5);
+    }
+
+    #[test]
+    fn line_col_byte_offset_line_past_end_returns_source_len() {
+        let src = "hello\nworld";
+        assert_eq!(line_col_to_byte_offset(src, 99, 1), src.len());
+    }
+
+    #[test]
+    fn line_col_byte_offset_empty_source() {
+        assert_eq!(line_col_to_byte_offset("", 1, 1), 0);
+    }
+}
