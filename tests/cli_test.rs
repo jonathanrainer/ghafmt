@@ -266,9 +266,9 @@ fn list_mode_exits_1_for_missing_file() {
 }
 
 #[test]
-fn color_never_produces_no_ansi_in_error_output() {
+fn colour_never_produces_no_ansi_in_error_output() {
     let output = cmd()
-        .arg("--color")
+        .arg("--colour")
         .arg("never")
         .arg("tests/fixtures/does_not_exist.yaml")
         .output()
