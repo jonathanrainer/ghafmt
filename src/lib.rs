@@ -30,28 +30,15 @@ mod workflow_emitter;
 mod workflow_processor;
 
 /// The formatted output and any advisory warnings produced for one file.
-struct FormatterResult {
+pub(crate) struct FormatterResult {
     /// Path to the source file, or `"-"` for stdin.
-    input: InputArg,
+    pub(crate) input: InputArg,
     /// Formatted YAML output.
-    output: String,
-    /// Original content before formatting. Only `Some` for stdin, where the source
-    /// cannot be re-read from disk for `--mode=check`/`--mode=list` comparisons.
-    original: Option<String>,
+    pub(crate) output: String,
+    /// Original content before formatting, captured at read time.
+    pub(crate) original: String,
     /// Non-fatal warnings produced during formatting.
-    warnings: Vec<Warning>,
-}
-
-impl FormatterResult {
-    /// Returns the original file content before formatting.
-    ///
-    /// For stdin, this is the captured input stored in [`FormatterResult::original`].
-    /// For file paths, the file is re-read from disk on demand.
-    fn original_content(&self) -> Option<String> {
-        self.original
-            .clone()
-            .or_else(|| self.input.read_to_string().ok())
-    }
+    pub(crate) warnings: Vec<Warning>,
 }
 
 /// Top-level formatter that processes and emits a GitHub Actions workflow file.
@@ -136,7 +123,7 @@ impl Ghafmt {
                 .map(|(output, warnings)| FormatterResult {
                     input: file.clone(),
                     output,
-                    original: Some(content),
+                    original: content,
                     warnings,
                 });
             results.push(result);

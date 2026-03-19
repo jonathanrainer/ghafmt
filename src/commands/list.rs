@@ -28,8 +28,7 @@ impl Command for List {
         let mut exit_code = ExitCode::SUCCESS;
 
         for formatter_result in successes.into_iter().flatten() {
-            if let Some(orig) = formatter_result.original_content()
-                && orig != formatter_result.output
+            if formatter_result.original != formatter_result.output
             {
                 println!("{:}", formatter_result.input);
                 exit_code = ExitCode::FAILURE;

@@ -30,14 +30,16 @@ impl Command for Check {
 
         for formatter_result in successes.into_iter().flatten() {
             self.render_warnings(&handler, &formatter_result.warnings, quiet);
-            if let Some(orig) = formatter_result.original_content()
-                && orig != formatter_result.output
+            if formatter_result.original != formatter_result.output
             {
                 eprintln!("--- {:#}", formatter_result.input);
                 eprintln!("+++ {:#}\t(formatted)", formatter_result.input);
                 eprintln!(
                     "{}",
-                    TextDiff::from_lines(orig.as_str(), formatter_result.output.as_str())
+                    TextDiff::from_lines(
+                        formatter_result.original.as_str(),
+                        formatter_result.output.as_str()
+                    )
                         .unified_diff()
                 );
                 exit_code = ExitCode::FAILURE;
