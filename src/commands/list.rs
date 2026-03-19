@@ -1,6 +1,6 @@
 use std::process::ExitCode;
 
-use crate::{cli::ColourMode, commands::Command, FormatterResult};
+use crate::{FormatterResult, cli::ColourMode, commands::Command};
 
 /// Print the path of each file that differs from its formatted form; return 1 if any do.
 pub(crate) struct List {}

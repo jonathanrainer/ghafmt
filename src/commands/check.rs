@@ -2,7 +2,7 @@ use std::process::ExitCode;
 
 use similar::TextDiff;
 
-use crate::{cli::ColourMode, commands::Command, errors::Result, FormatterResult};
+use crate::{FormatterResult, cli::ColourMode, commands::Command, errors::Result};
 
 /// Compare each result to its original; return 1 if any file differs or errored.
 pub(crate) struct Check {}

@@ -15,7 +15,7 @@ pub(crate) use list::List;
 use miette::{GraphicalReportHandler, GraphicalTheme};
 pub(crate) use write::Write;
 
-use crate::{cli::ColourMode, Error, FormatterResult, Result, Warning};
+use crate::{Error, FormatterResult, Result, Warning, cli::ColourMode};
 
 /// Shared interface for the four formatting modes (format, check, write, list).
 pub(crate) trait Command {

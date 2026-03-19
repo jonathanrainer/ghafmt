@@ -2,7 +2,7 @@ use std::process::ExitCode;
 
 use patharg::InputArg;
 
-use crate::{cli::ColourMode, commands::Command, fs::atomic_write, FormatterResult};
+use crate::{FormatterResult, cli::ColourMode, commands::Command, fs::atomic_write};
 
 /// Write each formatted result back to its source file; return 1 if any failed.
 pub(crate) struct Write {}
