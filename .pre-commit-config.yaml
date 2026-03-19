@@ -18,7 +18,7 @@ repos:
       - id: ghafmt
         name: ghafmt
         language: system
-        entry: cargo run --quiet -- --check
+        entry: cargo run --quiet -- --mode=check
         pass_filenames: false
         files: ^\.github/workflows/
 

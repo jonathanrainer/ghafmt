@@ -1,6 +1,4 @@
 //! Reads a workflow file, parses it, and applies the structure transformer pipeline.
-use std::{fs, path::Path};
-
 use fyaml::Document;
 use tracing::{info, warn};
 
@@ -48,29 +46,9 @@ impl WorkflowProcessor {
         }
     }
 
-    /// Read and parse the workflow at `file`, apply all transformers, and return the result.
-    ///
-    /// Returns the transformed document alongside any non-fatal warnings produced by
-    /// transformers that could not be applied. Fatal errors (unreadable file, invalid YAML)
-    /// are returned as `Err`.
-    pub(crate) fn process(&self, file: &Path) -> Result<(Document, Vec<Warning>)> {
-        let content = fs::read_to_string(file).map_err(|source| Error::ReadFile {
-            path: file.to_path_buf(),
-            source,
-        })?;
-        self.process_str(&content, &file.display().to_string())
-    }
-
     /// Parse `content` (identified as `name` in diagnostics), apply all transformers,
     /// and return the result.
-    ///
-    /// Unlike [`process`][Self::process] this does not perform any I/O, making it
-    /// suitable for formatting content that was not read from a file (e.g. stdin).
-    pub(crate) fn process_str(
-        &self,
-        content: &str,
-        name: &str,
-    ) -> Result<(Document, Vec<Warning>)> {
+    pub(crate) fn process(&self, content: &str, name: &str) -> Result<(Document, Vec<Warning>)> {
         let parse_result = Document::parse_str(content);
         let mut document = parse_result.map_err(|e| Error::parse_yaml(name, content, &e))?;
 

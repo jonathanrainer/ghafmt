@@ -27,6 +27,14 @@ pub enum Error {
         source: std::io::Error,
     },
 
+    /// The workflow file could not be read from stdin.
+    #[error("Could not read workflow file from stdin")]
+    ReadStdIn {
+        /// The underlying I/O error.
+        #[source]
+        source: std::io::Error,
+    },
+
     /// The workflow file could not be parsed as YAML.
     #[error("Could not parse workflow file as YAML: {message}")]
     #[diagnostic(
@@ -63,6 +71,20 @@ pub enum Error {
         /// The limit in megabytes.
         limit_mb: usize,
     },
+
+    #[error("stdin (-) cannot be used with --mode=write")]
+    #[diagnostic(
+        code(ghafmt::options::stdin_conflict),
+        help("remove the --mode=write flag and try again")
+    )]
+    StdinCannotBeUsedWithWrite,
+
+    #[error("multiple files require --mode=write, --mode=check, or --mode=list")]
+    #[diagnostic(
+        code(ghafmt::options::multiple_files_required),
+        help("add --mode=write, --mode=check or --mode=list")
+    )]
+    MultipleFilesNotValidInDefaultMode,
 }
 
 /// Non-fatal warnings produced during formatting.

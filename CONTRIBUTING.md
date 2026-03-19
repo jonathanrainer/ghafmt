@@ -27,7 +27,7 @@ The test suite includes:
 - **Roundtrip fixture tests** — each file in `tests/fixtures/dirty/` is formatted and compared against its counterpart in `tests/fixtures/clean/`
 - **Idempotency tests** — every clean fixture is formatted again and must be unchanged
 - **actionlint tests** — clean fixtures are validated with `actionlint` to ensure the formatter doesn't produce invalid workflow YAML
-- **CLI integration tests** — `assert_cmd`-based tests covering `--check`, `--write`, `--list`, and stdin
+- **CLI integration tests** — `assert_cmd`-based tests covering `--mode=check`, `--mode=write`, `--mode=list`, and stdin
 
 ## Adding a formatting rule
 

@@ -12,17 +12,20 @@ keywords = ["ci", "github-actions", "format"]
 categories = ["command-line-utilities", "development-tools"]
 
 [dependencies]
-heck = "=0.5.0"
+atomic-write-file = "=0.3.0"
 clap = { version = "=4.6.0", features = ["derive"] }
 fyaml = "=0.5.0"
+heck = "=0.5.0"
 miette = { version = "=7.6.0", features = ["fancy"] }
-thiserror = "=2.0.18"
+patharg = "=0.4.1"
+regex = "=1.12.3"
 similar = "=2.7.0"
+strum_macros = "=0.28.0"
+tempfile = "=3.27.0"
+thiserror = "=2.0.18"
 tracing = "=0.1.44"
 tracing-subscriber = "=0.3.23"
-regex = "=1.12.3"
 walkdir = "=2.5.0"
-tempfile = "=3.27.0"
 
 [lints.clippy]
 pedantic = "warn"
