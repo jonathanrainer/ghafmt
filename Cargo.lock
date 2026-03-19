@@ -446,12 +446,12 @@ dependencies = [
  "heck",
  "indoc",
  "miette",
+ "patharg",
  "predicates",
  "regex",
  "rstest",
  "similar",
  "similar-asserts",
- "strum",
  "strum_macros",
  "tempfile",
  "thiserror",
@@ -912,6 +912,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d211803b9b6b570f68772237e415a029d5a50c65d382910b879fb19d3271f94d"
 
 [[package]]
+name = "patharg"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4d67efed937875267f39986682045e3430c4da4055785825506837ddb037c771"
+dependencies = [
+ "cfg-if",
+ "either",
+]
+
+[[package]]
 name = "percent-encoding"
 version = "2.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1249,12 +1259,6 @@ name = "strsim"
 version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7da8b5736845d9f2fcb837ea5d9e2628564b3b043a70948a3f0b778838c5fb4f"
-
-[[package]]
-name = "strum"
-version = "0.28.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9628de9b8791db39ceda2b119bbe13134770b56c138ec1d3af810d045c04f9bd"
 
 [[package]]
 name = "strum_macros"

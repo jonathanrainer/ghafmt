@@ -1,5 +1,7 @@
 use std::process::ExitCode;
 
+use patharg::InputArg;
+
 use crate::{cli::ColourMode, commands::Command, fs::atomic_write, FormatterResult};
 
 /// Write each formatted result back to its source file; return 1 if any failed.
@@ -18,13 +20,15 @@ impl Command for Write {
             match result {
                 Ok(success) => {
                     self.render_warnings(&handler, &success.warnings, quiet);
-                    if let Err(e) = atomic_write(&success.path, &success.output) {
-                        eprintln!("{}: {e}", success.path.display());
+                    if let InputArg::Path(p) = &success.input
+                        && let Err(e) = atomic_write(p, &success.output)
+                    {
+                        eprintln!("{}: {e}", success.input);
                         exit_code = ExitCode::FAILURE;
                     }
                 }
                 Err(error) => {
-                    self.render_error(&handler, &error);
+                    self.render_error(&handler, error);
                     exit_code = ExitCode::FAILURE;
                 }
             }

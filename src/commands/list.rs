@@ -27,14 +27,12 @@ impl Command for List {
 
         let mut exit_code = ExitCode::SUCCESS;
 
-        for success in successes {
-            if let Ok(formatter_result) = success {
-                if let Some(orig) = formatter_result.original_content()
-                    && orig != formatter_result.output
-                {
-                    println!("{}", formatter_result.path.display());
-                    exit_code = ExitCode::FAILURE;
-                }
+        for formatter_result in successes.into_iter().flatten() {
+            if let Some(orig) = formatter_result.original_content()
+                && orig != formatter_result.output
+            {
+                println!("{:}", formatter_result.input);
+                exit_code = ExitCode::FAILURE;
             }
         }
 

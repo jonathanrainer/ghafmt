@@ -1,6 +1,5 @@
-use std::path::PathBuf;
-
 use clap::{Parser, ValueEnum};
+use patharg::InputArg;
 use strum_macros::Display;
 
 /// Format GitHub Actions workflow files.
@@ -34,7 +33,7 @@ Examples:
 )]
 pub struct Args {
     /// Workflow files or directories to format. Use `-` to read from stdin.
-    pub files: Vec<PathBuf>,
+    pub files: Vec<InputArg>,
     /// Mode to Operate in, i.e. what function should the formatter perform
     #[arg(default_value_t, long, short = 'm')]
     pub mode: Mode,

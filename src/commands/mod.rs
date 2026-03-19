@@ -1,6 +1,10 @@
+/// Check mode: compare formatted output against the original and report diffs.
 mod check;
+/// Format mode: write formatted output to stdout.
 mod format;
+/// List mode: print paths of files that differ from their formatted form.
 mod list;
+/// Write mode: format files in place.
 mod write;
 
 use std::process::ExitCode;
@@ -13,7 +17,9 @@ pub(crate) use write::Write;
 
 use crate::{cli::ColourMode, Error, FormatterResult, Result, Warning};
 
+/// Shared interface for the four formatting modes (format, check, write, list).
 pub(crate) trait Command {
+    /// Execute the command over `results` and return the appropriate exit code.
     fn run(
         &self,
         results: &[Result<FormatterResult>],
@@ -23,9 +29,9 @@ pub(crate) trait Command {
 
     /// Build a [`GraphicalReportHandler`] according to the chosen colour mode.
     ///
-    /// `--color always` forces colour on regardless of environment.
-    /// `--color never` forces colour off.
-    /// `--color auto` (the default) disables colour when `NO_COLOR` is set; otherwise
+    /// `--colour always` forces colour on regardless of environment.
+    /// `--colour never` forces colour off.
+    /// `--colour auto` (the default) disables colour when `NO_COLOR` is set; otherwise
     /// delegates to miette's own terminal detection.
     fn build_handler(&self, colour: ColourMode) -> GraphicalReportHandler {
         match colour {

@@ -28,21 +28,19 @@ impl Command for Check {
 
         let mut exit_code = ExitCode::SUCCESS;
 
-        for success in successes {
-            if let Ok(formatter_result) = success {
-                self.render_warnings(&handler, &formatter_result.warnings, quiet);
-                if let Some(orig) = formatter_result.original_content()
-                    && orig != formatter_result.output
-                {
-                    eprintln!("--- {}", formatter_result.path.display());
-                    eprintln!("+++ {}\t(formatted)", formatter_result.path.display());
-                    eprintln!(
-                        "{}",
-                        TextDiff::from_lines(orig.as_str(), formatter_result.output.as_str())
-                            .unified_diff()
-                    );
-                    exit_code = ExitCode::FAILURE;
-                }
+        for formatter_result in successes.into_iter().flatten() {
+            self.render_warnings(&handler, &formatter_result.warnings, quiet);
+            if let Some(orig) = formatter_result.original_content()
+                && orig != formatter_result.output
+            {
+                eprintln!("--- {:#}", formatter_result.input);
+                eprintln!("+++ {:#}\t(formatted)", formatter_result.input);
+                eprintln!(
+                    "{}",
+                    TextDiff::from_lines(orig.as_str(), formatter_result.output.as_str())
+                        .unified_diff()
+                );
+                exit_code = ExitCode::FAILURE;
             }
         }
 

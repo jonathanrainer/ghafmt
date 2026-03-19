@@ -20,7 +20,7 @@ impl Command for Format {
                     print!("{}", success.output);
                 }
                 Err(error) => {
-                    self.render_error(&handler, &error);
+                    self.render_error(&handler, error);
                     return ExitCode::FAILURE;
                 }
             }
