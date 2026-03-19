@@ -31,4 +31,4 @@ jobs:
         run: cargo build --release
 
       - name: Check workflow formatting
-        run: ./target/release/ghafmt --check .github/workflows/
+        run: ./target/release/ghafmt --mode=check .github/workflows/
