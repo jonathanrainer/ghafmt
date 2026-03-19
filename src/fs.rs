@@ -59,16 +59,51 @@ pub(crate) fn is_stdin(path: &Path) -> bool {
     path.as_os_str() == STDIN
 }
 
+/// Read the entire contents of stdin into a string, returning [`Error::StdinTooLarge`] if the
+/// input exceeds [`STDIN_SIZE_LIMIT`].
 pub(crate) fn read_from_stdin() -> Result<String> {
+    read_with_limit(std::io::stdin(), STDIN_SIZE_LIMIT)
+}
+
+/// Read from `reader` up to `limit` bytes into a string. If the reader contains more than `limit`
+/// bytes, returns [`Error::StdinTooLarge`] rather than silently truncating the input.
+fn read_with_limit<R: Read>(mut reader: R, limit: u64) -> Result<String> {
     let mut content = String::new();
-    match std::io::stdin()
-        .take(STDIN_SIZE_LIMIT)
-        .read_to_string(&mut content)
-    {
-        Err(source) => Err(Error::ReadStdIn { source }),
-        Ok(n) if n as u64 > STDIN_SIZE_LIMIT => Err(Error::StdinTooLarge {
-            limit_mb: (STDIN_SIZE_LIMIT / (1024 * 1024)) as usize,
+    if let Err(source) = reader.by_ref().take(limit).read_to_string(&mut content) {
+        return Err(Error::ReadStdIn { source });
+    }
+    // Try and read one extra byte to check if we've read all the data
+    let mut overflow = [0u8; 1];
+    match reader.read(&mut overflow) {
+        Ok(0) | Err(_) => Ok(content),
+        Ok(_) => Err(Error::StdinTooLarge {
+            limit_mb: (limit / (1024 * 1024)) as usize,
         }),
-        Ok(_) => Ok(content),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn under_limit_is_accepted() {
+        let input = b"hello";
+        let result = read_with_limit(input.as_ref(), 10);
+        assert_eq!(result.unwrap(), "hello");
+    }
+
+    #[test]
+    fn exactly_at_limit_is_accepted() {
+        let input = b"hello";
+        let result = read_with_limit(input.as_ref(), 5);
+        assert_eq!(result.unwrap(), "hello");
+    }
+
+    #[test]
+    fn over_limit_is_rejected() {
+        let input = b"hello!";
+        let result = read_with_limit(input.as_ref(), 5);
+        assert!(matches!(result, Err(Error::StdinTooLarge { limit_mb: 0 })));
     }
 }
