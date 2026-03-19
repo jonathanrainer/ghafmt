@@ -3,6 +3,7 @@ use std::{
     path::Path,
 };
 
+use atomic_write_file::AtomicWriteFile;
 use patharg::InputArg;
 use walkdir::WalkDir;
 
@@ -52,13 +53,9 @@ pub(crate) fn expand_paths(paths: Vec<InputArg>) -> Vec<InputArg> {
 /// directory, then rename it into place. This prevents a partial file if the
 /// process is interrupted mid-write.
 pub(crate) fn atomic_write(path: &Path, content: &str) -> std::io::Result<()> {
-    let dir = path.parent().unwrap_or_else(|| Path::new("."));
-    let mut tmp = tempfile::NamedTempFile::new_in(dir)?;
-    tmp.write_all(content.as_bytes())?;
-    match tmp.persist(path) {
-        Ok(_) => Ok(()),
-        Err(e) => Err(e.error),
-    }
+    let mut file = AtomicWriteFile::options().open(path)?;
+    file.write_all(content.as_bytes())?;
+    file.commit()
 }
 
 /// Read the entire contents of stdin into a string, returning [`Error::StdinTooLarge`] if the
@@ -86,7 +83,19 @@ fn read_with_limit<R: Read>(mut reader: R, limit: u64) -> Result<String> {
 
 #[cfg(test)]
 mod tests {
+    use std::fs;
+
+    use tempfile::NamedTempFile;
+
     use super::*;
+
+    #[test]
+    fn atomic_write_overwrites_existing_content() {
+        let tmp = NamedTempFile::new().unwrap();
+        atomic_write(tmp.path(), "original content").unwrap();
+        atomic_write(tmp.path(), "new content").unwrap();
+        assert_eq!(fs::read_to_string(tmp.path()).unwrap(), "new content");
+    }
 
     #[test]
     fn under_limit_is_accepted() {
