@@ -39,7 +39,8 @@ fn default_mode_exits_1_for_missing_file() {
     cmd()
         .arg("tests/fixtures/does_not_exist.yaml")
         .assert()
-        .failure();
+        .failure()
+        .stderr(predicates::str::contains("does_not_exist.yaml"));
 }
 
 #[test]
@@ -49,7 +50,7 @@ fn default_mode_exits_1_for_multiple_files_without_write() {
         .arg("tests/fixtures/clean/basic_reorder.yaml")
         .assert()
         .failure()
-        .stderr(predicates::str::contains("--write"));
+        .stderr(predicates::str::contains("write"));
 }
 
 #[test]
@@ -70,11 +71,11 @@ fn default_mode_stdin_formats_and_writes_to_stdout() {
 #[case("tests/fixtures/dirty/basic_reorder.yaml", false)]
 #[case("tests/fixtures/dirty/step_reorder.yaml", false)]
 fn check_mode_exit_code(#[case] path: &str, #[case] expect_success: bool) {
-    let assertion = cmd().arg("--check").arg(path).assert();
+    let assertion = cmd().arg("--mode=check").arg(path).assert();
     if expect_success {
         assertion.success();
     } else {
-        assertion.failure();
+        assertion.failure().stderr(predicates::str::contains("---"));
     }
 }
 
@@ -87,7 +88,7 @@ fn check_mode_exits_correctly(
     #[case] expect_success: bool,
     #[case] produce_diff: bool,
 ) {
-    let mut assertion = cmd().arg("--check").args(file_args).assert();
+    let mut assertion = cmd().arg("--mode=check").args(file_args).assert();
     if expect_success {
         assertion.success().stderr("").stdout("");
     } else {
@@ -96,6 +97,8 @@ fn check_mode_exits_correctly(
             assertion
                 .stderr(predicates::str::contains("---"))
                 .stdout("");
+        } else {
+            assertion.stderr(predicates::str::contains("does_not_exist.yaml"));
         }
     }
 }
@@ -103,7 +106,7 @@ fn check_mode_exits_correctly(
 #[test]
 fn check_mode_multiple_diffs() {
     cmd()
-        .arg("--check")
+        .arg("--mode=check")
         .args(vec![
             "tests/fixtures/dirty/step_reorder.yaml",
             "tests/fixtures/dirty/all_job_keys.yaml",
@@ -124,11 +127,15 @@ fn check_mode_multiple_diffs() {
 #[case::fail_for_dirty_content("tests/fixtures/dirty/basic_reorder.yaml", false)]
 fn check_mode_stdin(#[case] path: &str, #[case] expect_success: bool) {
     let content = std::fs::read_to_string(path).unwrap();
-    let assertion = cmd().arg("--check").arg("-").write_stdin(content).assert();
+    let assertion = cmd()
+        .arg("--mode=check")
+        .arg("-")
+        .write_stdin(content)
+        .assert();
     if expect_success {
         assertion.success();
     } else {
-        assertion.failure();
+        assertion.failure().stderr(predicates::str::contains("---"));
     }
 }
 
@@ -139,7 +146,7 @@ fn check_mode_stdin(#[case] path: &str, #[case] expect_success: bool) {
 fn write_mode(#[case] inputs_and_outputs: Vec<(&str, &str)>, #[case] expect_success: bool) {
     for (input, output) in &inputs_and_outputs {
         let (_dir, path) = copy_fixture(input);
-        let assertion = cmd().arg("--write").arg(&path).assert().success();
+        let assertion = cmd().arg("--mode=write").arg(&path).assert().success();
         if expect_success {
             assertion.success();
             assert_eq!(
@@ -155,20 +162,21 @@ fn write_mode(#[case] inputs_and_outputs: Vec<(&str, &str)>, #[case] expect_succ
 #[test]
 fn write_mode_exits_1_for_missing_file() {
     cmd()
-        .arg("--write")
+        .arg("--mode=write")
         .arg("tests/fixtures/does_not_exist.yaml")
         .assert()
-        .failure();
+        .failure()
+        .stderr(predicates::str::contains("does_not_exist.yaml"));
 }
 
 #[test]
 fn write_mode_rejects_stdin() {
     cmd()
-        .arg("--write")
+        .arg("--mode=write")
         .arg("-")
         .assert()
         .failure()
-        .stderr(predicates::str::contains("--write"));
+        .stderr(predicates::str::contains("write"));
 }
 
 #[test]
@@ -182,7 +190,7 @@ fn write_mode_expands_directory_and_formats_yaml_files() {
     let clean1 = std::fs::read_to_string("tests/fixtures/clean/basic_reorder.yaml").unwrap();
     let clean2 = std::fs::read_to_string("tests/fixtures/clean/step_reorder.yaml").unwrap();
 
-    cmd().arg("--write").arg(dir.path()).assert().success();
+    cmd().arg("--mode=write").arg(dir.path()).assert().success();
 
     assert_eq!(std::fs::read_to_string(&path1).unwrap(), clean1);
     assert_eq!(std::fs::read_to_string(&path2).unwrap(), clean2);
@@ -197,7 +205,12 @@ fn check_mode_expands_directory() {
     )
     .unwrap();
 
-    cmd().arg("--check").arg(dir.path()).assert().failure();
+    cmd()
+        .arg("--mode=check")
+        .arg(dir.path())
+        .assert()
+        .failure()
+        .stderr(predicates::str::contains("---"));
 }
 
 #[test]
@@ -213,7 +226,7 @@ fn directory_expansion_ignores_non_yaml_files() {
 #[test]
 fn list_mode_exits_0_and_no_output_for_clean_file() {
     cmd()
-        .arg("--list")
+        .arg("--mode=list")
         .arg("tests/fixtures/clean/identity.yaml")
         .assert()
         .success()
@@ -223,7 +236,7 @@ fn list_mode_exits_0_and_no_output_for_clean_file() {
 #[test]
 fn list_mode_exits_1_and_prints_path_for_dirty_file() {
     cmd()
-        .arg("--list")
+        .arg("--mode=list")
         .arg("tests/fixtures/dirty/basic_reorder.yaml")
         .assert()
         .failure()
@@ -233,7 +246,7 @@ fn list_mode_exits_1_and_prints_path_for_dirty_file() {
 #[test]
 fn list_mode_only_prints_dirty_files_when_mixed() {
     cmd()
-        .arg("--list")
+        .arg("--mode=list")
         .arg("tests/fixtures/clean/identity.yaml")
         .arg("tests/fixtures/dirty/basic_reorder.yaml")
         .assert()
@@ -245,10 +258,11 @@ fn list_mode_only_prints_dirty_files_when_mixed() {
 #[test]
 fn list_mode_exits_1_for_missing_file() {
     cmd()
-        .arg("--list")
+        .arg("--mode=list")
         .arg("tests/fixtures/does_not_exist.yaml")
         .assert()
-        .failure();
+        .failure()
+        .stderr(predicates::str::contains("does_not_exist.yaml"));
 }
 
 #[test]

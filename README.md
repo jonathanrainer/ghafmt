@@ -147,19 +147,19 @@ ghafmt workflow.yml
 cat workflow.yml | ghafmt -
 
 # Check formatting without writing (exits non-zero if any file is dirty)
-ghafmt --check .github/workflows/
+ghafmt --mode=check .github/workflows/
 
 # Write changes in place
-ghafmt --write .github/workflows/
+ghafmt --mode=write .github/workflows/
 
 # List files that would be changed
-ghafmt --list .github/workflows/
+ghafmt --mode=list .github/workflows/
 ```
 
 ### Docker
 
 ```bash
-docker run --rm -v "$PWD":/work ghcr.io/jonathanrainer/ghafmt:latest --check /work/.github/workflows/
+docker run --rm -v "$PWD":/work ghcr.io/jonathanrainer/ghafmt:latest --mode=check /work/.github/workflows/
 ```
 
 ## CI Integration
@@ -181,7 +181,7 @@ Or use the Docker image directly:
 - name: Check workflow formatting
   run: |
     docker run --rm -v "$GITHUB_WORKSPACE":/work \
-      ghcr.io/jonathanrainer/ghafmt:latest --check /work/.github/workflows/
+      ghcr.io/jonathanrainer/ghafmt:latest --mode=check /work/.github/workflows/
 ```
 
 ### CircleCI
@@ -192,7 +192,7 @@ Or use the Docker image directly:
     command: |
       VERSION=$(curl -fsSL https://api.github.com/repos/jonathanrainer/ghafmt/releases/latest | grep tag_name | cut -d'"' -f4 | sed 's/^v//')
       curl -fsSL "https://github.com/jonathanrainer/ghafmt/releases/download/v${VERSION}/ghafmt-${VERSION}-x86_64-unknown-linux-musl.tar.gz" | tar -xz -C /tmp
-      /tmp/ghafmt --check .github/workflows/
+      /tmp/ghafmt --mode=check .github/workflows/
 ```
 
 ## Pre-commit
@@ -206,7 +206,7 @@ repos:
       - id: ghafmt
         name: ghafmt
         language: system
-        entry: ghafmt --check
+        entry: ghafmt --mode=check
         pass_filenames: false
         files: ^\.github/workflows/
 ```

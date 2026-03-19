@@ -23,6 +23,8 @@ tracing-subscriber = "=0.3.23"
 regex = "=1.12.3"
 walkdir = "=2.5.0"
 tempfile = "=3.27.0"
+strum = "=0.28.0"
+strum_macros = "=0.28.0"
 
 [lints.clippy]
 pedantic = "warn"

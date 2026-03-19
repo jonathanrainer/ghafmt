@@ -11,7 +11,7 @@ fn test_idempotency(#[files("tests/fixtures/clean/*.yaml")] path: PathBuf) {
     let mut formatter = Ghafmt::new();
 
     let (formatted, _) = formatter
-        .format_gha_workflow(&path)
+        .format_gha_workflow(&original, "foo")
         .expect("Could not format workflow");
 
     assert_eq!(original, formatted, "Formatting is not idempotent");
@@ -25,7 +25,7 @@ fn test_idempotency_pending(#[files("tests/fixtures/pending/clean/*.yaml")] path
     let mut formatter = Ghafmt::new();
 
     let (formatted, _) = formatter
-        .format_gha_workflow(&path)
+        .format_gha_workflow(&original, "foo")
         .expect("Could not format workflow");
 
     assert_eq!(original, formatted, "Formatting is not idempotent");

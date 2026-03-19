@@ -12,15 +12,16 @@ fn test_formatter(#[files("tests/fixtures/dirty/*.yaml")] path: PathBuf) {
         .to_str()
         .expect("file name is valid UTF-8")
         .to_owned();
-    let clean_file_path = PathBuf::from("tests/fixtures/clean").join(clean_file_name);
+    let clean_file_path = PathBuf::from("tests/fixtures/clean").join(clean_file_name.clone());
 
     let clean_file_contents = read_to_string(clean_file_path.clone())
         .unwrap_or_else(|_| panic!("{} not found", clean_file_path.display()));
 
     let mut formatter = Ghafmt::new();
 
+    let content = read_to_string(&path).expect("Could not read test file");
     let (formatted, _) = formatter
-        .format_gha_workflow(&path)
+        .format_gha_workflow(&content, &clean_file_name)
         .expect("Could not format workflow");
 
     assert_eq!(clean_file_contents, formatted);
@@ -35,15 +36,17 @@ fn test_formatter_pending(#[files("tests/fixtures/pending/dirty/*.yaml")] path: 
         .to_str()
         .expect("file name is valid UTF-8")
         .to_owned();
-    let clean_file_path = PathBuf::from("tests/fixtures/pending/clean").join(clean_file_name);
+    let clean_file_path =
+        PathBuf::from("tests/fixtures/pending/clean").join(clean_file_name.clone());
 
     let clean_file_contents = read_to_string(clean_file_path.clone())
         .unwrap_or_else(|_| panic!("{} not found", clean_file_path.display()));
 
     let mut formatter = Ghafmt::new();
 
+    let content = read_to_string(&path).expect("Could not read test file");
     let (formatted, _) = formatter
-        .format_gha_workflow(&path)
+        .format_gha_workflow(&content, &clean_file_name)
         .expect("Could not format workflow");
 
     assert_eq!(clean_file_contents, formatted);
