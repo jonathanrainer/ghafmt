@@ -1,6 +1,6 @@
 use std::process::ExitCode;
 
-use crate::{FormatterResult, cli::ColourMode, commands::Command};
+use crate::{FormatterResult, cli::ColourMode, commands::{Command, build_handler, render_error}};
 
 /// Print each formatted result to stdout; exit 1 immediately on the first error.
 pub(crate) struct Format {}
@@ -12,7 +12,7 @@ impl Command for Format {
         colour_mode: ColourMode,
         quiet: bool,
     ) -> ExitCode {
-        let handler = self.build_handler(colour_mode);
+        let handler = build_handler(colour_mode);
         for result in results {
             match result {
                 Ok(success) => {
@@ -20,7 +20,7 @@ impl Command for Format {
                     print!("{}", success.output);
                 }
                 Err(error) => {
-                    self.render_error(&handler, error);
+                    render_error(&handler, error);
                     return ExitCode::FAILURE;
                 }
             }

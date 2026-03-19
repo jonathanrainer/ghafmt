@@ -2,7 +2,7 @@ use std::process::ExitCode;
 
 use similar::TextDiff;
 
-use crate::{FormatterResult, cli::ColourMode, commands::Command, errors::Result};
+use crate::{FormatterResult, cli::ColourMode, commands::{Command, build_handler, render_error}, errors::Result};
 
 /// Compare each result to its original; return 1 if any file differs or errored.
 pub(crate) struct Check {}
@@ -14,13 +14,13 @@ impl Command for Check {
         colour_mode: ColourMode,
         quiet: bool,
     ) -> ExitCode {
-        let handler = self.build_handler(colour_mode);
+        let handler = build_handler(colour_mode);
         let (successes, failures): (Vec<_>, Vec<_>) = results.iter().partition(|a| a.is_ok());
 
         if !failures.is_empty() {
             for failure in failures {
                 if let Err(e) = failure {
-                    self.render_error(&handler, e);
+                    render_error(&handler, e);
                 }
             }
             return ExitCode::FAILURE;

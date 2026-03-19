@@ -13,7 +13,7 @@ use tracing::info;
 
 use crate::{
     cli::{ColourMode, Mode},
-    commands::Command,
+    commands::{Command, build_handler, render_error},
     fs::{expand_paths, read_from_stdin},
     workflow_emitter::WorkflowEmitter,
     workflow_processor::WorkflowProcessor,
@@ -86,14 +86,16 @@ impl Ghafmt {
         colour_mode: ColourMode,
         quiet: bool,
     ) -> ExitCode {
+        let handler = build_handler(colour_mode);
+
         if matches!(mode, Mode::Write) && files.iter().any(InputArg::is_stdin) {
-            eprintln!("error: stdin (-) cannot be used with --mode=write");
+            render_error(&handler, &Error::StdinCannotBeUsedWithWrite);
             return ExitCode::FAILURE;
         }
 
         // Default (stdout) mode can only handle one file; all other modes accept many.
         if matches!(mode, Mode::Format) && files.len() > 1 {
-            eprintln!("error: multiple files require --mode=write, --mode=check, or --mode=list");
+            render_error(&handler, &Error::MultipleFilesNotValidInDefaultMode);
             return ExitCode::FAILURE;
         }
 

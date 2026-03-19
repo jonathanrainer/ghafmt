@@ -2,7 +2,7 @@ use std::process::ExitCode;
 
 use patharg::InputArg;
 
-use crate::{FormatterResult, cli::ColourMode, commands::Command, fs::atomic_write};
+use crate::{FormatterResult, cli::ColourMode, commands::{Command, build_handler, render_error}, fs::atomic_write};
 
 /// Write each formatted result back to its source file; return 1 if any failed.
 pub(crate) struct Write {}
@@ -15,7 +15,7 @@ impl Command for Write {
         quiet: bool,
     ) -> ExitCode {
         let mut exit_code = ExitCode::SUCCESS;
-        let handler = self.build_handler(colour_mode);
+        let handler = build_handler(colour_mode);
         for result in results {
             match result {
                 Ok(success) => {
@@ -28,7 +28,7 @@ impl Command for Write {
                     }
                 }
                 Err(error) => {
-                    self.render_error(&handler, error);
+                    render_error(&handler, error);
                     exit_code = ExitCode::FAILURE;
                 }
             }
