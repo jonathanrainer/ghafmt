@@ -15,7 +15,7 @@ impl Default for FilterSorter {
             "on/pull_request/branches",
             "on/pull_request/branches-ignore",
             "on/pull_request_target/branches",
-            "on/pull_request_targe/branches-ignore",
+            "on/pull_request_target/branches-ignore",
             "on/push/branches",
             "on/push/branches-ignore",
             "on/push/tags",
@@ -244,6 +244,22 @@ mod tests {
             on:
               pull_request_target:
                 branches:
+                - develop
+                - main
+        "}.to_string()
+    )]
+    #[case::pull_request_target_branches_ignore_sorted(
+        Document::from_string(indoc! {"
+            on:
+                pull_request_target:
+                    branches-ignore:
+                        - main
+                        - develop
+        "}.to_string()).expect("test input is valid YAML"),
+        indoc! {"
+            on:
+              pull_request_target:
+                branches-ignore:
                 - develop
                 - main
         "}.to_string()
