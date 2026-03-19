@@ -256,6 +256,16 @@ fn list_mode_only_prints_dirty_files_when_mixed() {
 }
 
 #[test]
+fn list_mode_rejects_stdin() {
+    cmd()
+        .arg("--mode=list")
+        .arg("-")
+        .assert()
+        .failure()
+        .stderr(predicates::str::contains("list"));
+}
+
+#[test]
 fn list_mode_exits_1_for_missing_file() {
     cmd()
         .arg("--mode=list")

@@ -71,10 +71,17 @@ pub enum Error {
 
     #[error("stdin (-) cannot be used with --mode=write")]
     #[diagnostic(
-        code(ghafmt::options::stdin_conflict),
+        code(ghafmt::options::stdin_write_conflict),
         help("remove the --mode=write flag and try again")
     )]
     StdinCannotBeUsedWithWrite,
+
+    #[error("stdin (-) cannot be used with --mode=list")]
+    #[diagnostic(
+        code(ghafmt::options::stdin_list_conflict),
+        help("remove the --mode=list flag and try again")
+    )]
+    StdinCannotBeUsedWithList,
 
     #[error("multiple files require --mode=write, --mode=check, or --mode=list")]
     #[diagnostic(

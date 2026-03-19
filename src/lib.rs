@@ -80,6 +80,11 @@ impl Ghafmt {
             return ExitCode::FAILURE;
         }
 
+        if matches!(mode, Mode::List) && files.iter().any(InputArg::is_stdin) {
+            render_error(&handler, &Error::StdinCannotBeUsedWithList);
+            return ExitCode::FAILURE;
+        }
+
         // Default (stdout) mode can only handle one file; all other modes accept many.
         if matches!(mode, Mode::Format) && files.len() > 1 {
             render_error(&handler, &Error::MultipleFilesNotValidInDefaultMode);
