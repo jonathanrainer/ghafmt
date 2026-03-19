@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use fyaml::Document;
 
 use crate::{
-    constants::{INPUT_ORDER, OUTPUT_ORDER, SECRET_ORDER, WORKFLOW_KEYS},
+    constants::INPUT_ORDER,
     structure_transformers::{StructureTransformer, for_each_mapping_child},
 };
 
@@ -18,28 +18,17 @@ pub(crate) struct WorkflowDispatchSorter {
 impl Default for WorkflowDispatchSorter {
     fn default() -> Self {
         WorkflowDispatchSorter {
-            order_map: HashMap::from([
-                ("inputs".to_string(), INPUT_ORDER.map(String::from).to_vec()),
-                (
-                    "outputs".to_string(),
-                    OUTPUT_ORDER.map(String::from).to_vec(),
-                ),
-                (
-                    "secrets".to_string(),
-                    SECRET_ORDER.map(String::from).to_vec(),
-                ),
-            ]),
+            order_map: HashMap::from([(
+                "inputs".to_string(),
+                INPUT_ORDER.map(String::from).to_vec(),
+            )]),
         }
     }
 }
 
 impl StructureTransformer for WorkflowDispatchSorter {
     fn process(&self, mut doc: Document) -> fyaml::Result<Document> {
-        doc = self.sort_mapping_at_path(
-            doc,
-            "/on/workflow_dispatch",
-            &WORKFLOW_KEYS.map(String::from).to_vec(),
-        )?;
+        doc = self.sort_path_to_mapping_alphabetically(doc, "/on/workflow_dispatch")?;
         doc = for_each_mapping_child(doc, "/on/workflow_dispatch", |doc, child_path| {
             self.sort_path_to_mapping_alphabetically(doc, child_path)
         })?;
