@@ -2,12 +2,14 @@
 mod jobs_blank_lines;
 mod steps_blank_lines;
 mod top_level_blank_lines;
+mod top_level_comment_spacer;
 mod variable_spacer;
 
 use fyaml::{EmitEvent, WriteType};
 pub(crate) use jobs_blank_lines::JobsBlankLines;
 pub(crate) use steps_blank_lines::StepsBlankLines;
 pub(crate) use top_level_blank_lines::TopLevelBlankLines;
+pub(crate) use top_level_comment_spacer::TopLevelCommentSpacer;
 pub(crate) use variable_spacer::VariableSpacer;
 
 /// This trait captures what it means for a transform operation to act on the presentation
@@ -29,10 +31,16 @@ pub(crate) trait PresentationTransformer {
 /// The algorithm detects whole-line comments by looking for the pattern:
 ///   Linebreak → (Indent)* → Comment
 /// and pushes the insertion point before such blocks.
+///
+/// `max_comment_indent`: when `Some(n)`, a comment preceded by an `Indent` whose length exceeds
+/// `n` is treated as content (not a comment block to skip). This prevents the scan from reaching
+/// deeply-nested comments that belong to the previous section rather than the one being separated.
+/// Pass `None` to use the original behaviour (skip any whole-line comment regardless of indent).
 pub(crate) fn insert_blank_line_before_comment_block(
     events: &mut Vec<EmitEvent>,
     scan_start: usize,
     scan_end: usize,
+    max_comment_indent: Option<usize>,
 ) {
     #[derive(Clone, Copy)]
     enum State {
@@ -47,6 +55,14 @@ pub(crate) fn insert_blank_line_before_comment_block(
 
     for i in (scan_start..scan_end).rev() {
         match (events[i].write_type, state) {
+            // A comment preceded by an indent deeper than `max_comment_indent` belongs to the
+            // previous section; stop here so the blank line lands after it, not before it.
+            (WriteType::Indent, State::CommentDetected)
+                if max_comment_indent.is_some_and(|max| events[i].content.len() > max) =>
+            {
+                found_content = true;
+                break;
+            }
             (WriteType::Indent, _) => {}
             (WriteType::Comment, State::Init | State::WholeLineCommentDetected) => {
                 state = State::CommentDetected;
@@ -161,7 +177,7 @@ mod tests {
         #[case] scan_end: usize,
         #[case] expected: Vec<EmitEvent>,
     ) {
-        insert_blank_line_before_comment_block(&mut input, scan_start, scan_end);
+        insert_blank_line_before_comment_block(&mut input, scan_start, scan_end, None);
         assert_eq!(input, expected);
     }
 }

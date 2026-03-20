@@ -3,10 +3,10 @@ name: Comment Edge Cases
 on:
   push:
     branches:
-      # comment before a sequence item
-      - main
       # comment between sequence items
       - develop
+      # comment before a sequence item
+      - main
       # comment after last sequence item
 
 jobs:

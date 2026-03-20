@@ -10,8 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     # environment variables at job level
     env:
-      DEBUG: "true" # inline env comment
-      NODE_ENV: production # another inline env comment
+      DEBUG: "true" # another inline env comment
+      NODE_ENV: production # inline env comment
     steps: # steps-level comment
       - name: Checkout code # inline step comment
         uses: actions/checkout@v4 # action version inline

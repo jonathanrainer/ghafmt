@@ -28,7 +28,7 @@ impl PresentationTransformer for TopLevelBlankLines {
                 {
                     if !result.is_empty() {
                         let len = result.len();
-                        insert_blank_line_before_comment_block(&mut result, 0, len);
+                        insert_blank_line_before_comment_block(&mut result, 0, len, Some(0));
                     }
                 }
                 _ => {}

@@ -16,17 +16,3 @@ fn test_idempotency(#[files("tests/fixtures/clean/*.yaml")] path: PathBuf) {
 
     assert_eq!(original, formatted, "Formatting is not idempotent");
 }
-
-#[rstest]
-#[ignore = "pending fixtures are works in progress"]
-fn test_idempotency_pending(#[files("tests/fixtures/pending/clean/*.yaml")] path: PathBuf) {
-    let original = read_to_string(&path).unwrap_or_else(|_| panic!("{} not found", path.display()));
-
-    let mut formatter = Ghafmt::new();
-
-    let (formatted, _) = formatter
-        .format_gha_workflow(&original, "foo")
-        .expect("Could not format workflow");
-
-    assert_eq!(original, formatted, "Formatting is not idempotent");
-}

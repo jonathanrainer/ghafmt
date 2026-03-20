@@ -58,7 +58,7 @@ impl PresentationTransformer for StepsBlankLines {
                 {
                     if !is_first {
                         let len = result.len();
-                        insert_blank_line_before_comment_block(&mut result, start, len);
+                        insert_blank_line_before_comment_block(&mut result, start, len, Some(6));
                     }
                     state = State::Step {
                         start,

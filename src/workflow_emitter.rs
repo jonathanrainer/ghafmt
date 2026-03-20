@@ -6,7 +6,7 @@ use crate::{
     errors::{Error, Result},
     presentation_transformers::{
         JobsBlankLines, PresentationTransformer, StepsBlankLines, TopLevelBlankLines,
-        VariableSpacer,
+        TopLevelCommentSpacer, VariableSpacer,
     },
 };
 
@@ -24,6 +24,7 @@ impl WorkflowEmitter {
                 Box::new(JobsBlankLines::default()),
                 Box::new(StepsBlankLines::default()),
                 Box::new(TopLevelBlankLines::default()),
+                Box::new(TopLevelCommentSpacer::default()),
                 Box::new(VariableSpacer),
             ],
         }
