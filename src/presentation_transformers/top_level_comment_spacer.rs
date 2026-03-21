@@ -1,7 +1,9 @@
 //! Ensures top-level standalone comments are visually separated from surrounding content.
 use fyaml::{EmitEvent, WriteType};
 
-use crate::presentation_transformers::{PresentationTransformer, insert_blank_line_before_comment_block};
+use crate::presentation_transformers::{
+    PresentationTransformer, insert_blank_line_before_comment_block,
+};
 
 #[derive(Default)]
 /// Inserts a blank line before any block of standalone top-level comments (col 0, no preceding

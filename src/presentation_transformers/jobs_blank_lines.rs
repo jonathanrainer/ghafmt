@@ -51,7 +51,12 @@ impl PresentationTransformer for JobsBlankLines {
                     // has already been pushed and must be excluded from the scan
                     if !is_first {
                         let len = result.len();
-                        insert_blank_line_before_comment_block(&mut result, start, len - 1, Some(2));
+                        insert_blank_line_before_comment_block(
+                            &mut result,
+                            start,
+                            len - 1,
+                            Some(2),
+                        );
                     }
                     state = State::Jobs {
                         start,
@@ -230,5 +235,4 @@ mod tests {
 
         assert_eq!(result, expected);
     }
-
 }
