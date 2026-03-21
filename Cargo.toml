@@ -43,5 +43,5 @@ tempfile = "=3.27.0"
 
 [patch.crates-io]
 fyaml = { git = "https://github.com/jonathanrainer/fyaml", rev = "c4b0b3d8f304eb99c447e3254ea296b163c80e3e" }
-fyaml-sys = { git = "https://github.com/jonathanrainer/fyaml-sys", rev = "e97369b2424f6642f05db35a25df495e54db8fbb" }
+fyaml-sys = { git = "https://github.com/jonathanrainer/fyaml-sys", rev = "9ccbc1a05dd4aca4e71ce91fbee114f686ff66ab" }
 
