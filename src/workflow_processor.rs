@@ -8,15 +8,15 @@ use crate::{
 };
 
 /// Applies the ordered sequence of [`StructureTransformer`]s to a parsed workflow document.
-pub(crate) struct WorkflowProcessor {
+pub(crate) struct Processor {
     /// Ordered list of structure transformers to apply in sequence.
     transformers: Vec<Box<dyn StructureTransformer>>,
 }
 
-impl WorkflowProcessor {
+impl Processor {
     /// Create a `WorkflowProcessor` with a custom transformer pipeline.
     pub(crate) fn new(transformers: Vec<Box<dyn StructureTransformer>>) -> Self {
-        WorkflowProcessor { transformers }
+        Processor { transformers }
     }
 
     /// Parse `content` (identified as `name` in diagnostics), apply all transformers,
@@ -99,7 +99,7 @@ mod tests {
 
     #[test]
     fn failed_transformer_produces_warning() {
-        let proc = WorkflowProcessor::new(vec![Box::new(AlwaysFail)]);
+        let proc = Processor::new(vec![Box::new(AlwaysFail)]);
         let starter_doc = Document::from_string("a: b\n".to_string()).expect("valid YAML");
         let (_, warnings) = proc.process(starter_doc).expect("process failed");
         assert_eq!(warnings.len(), 1);
@@ -111,7 +111,7 @@ mod tests {
     #[test]
     fn failed_transformer_document_is_restored() {
         // AlwaysFail runs but fails; the document should be unchanged after it.
-        let proc = WorkflowProcessor::new(vec![Box::new(AlwaysFail)]);
+        let proc = Processor::new(vec![Box::new(AlwaysFail)]);
         let starter_doc = Document::from_string("a: b\n".to_string()).expect("valid YAML");
         let (doc, _) = proc.process(starter_doc).expect("process failed");
         assert_eq!(doc.to_string(), "a: b\n");
@@ -121,7 +121,7 @@ mod tests {
     fn subsequent_transformers_run_after_failure() {
         // Pipeline: mark with "before", fail, mark with "after".
         // Both markers should be present in the output.
-        let proc = WorkflowProcessor::new(vec![
+        let proc = Processor::new(vec![
             Box::new(AppendMarker { key: "before" }),
             Box::new(AlwaysFail),
             Box::new(AppendMarker { key: "after" }),

@@ -1,0 +1,25 @@
+name: Composite Action
+
+description: A simple composite action
+
+author: Test Author
+
+inputs:
+  greeting:
+    description: Who to greet
+    required: true
+
+outputs:
+  result:
+    description: The result
+    value: ${{ steps.do_something.outputs.result }}
+
+runs:
+  using: composite
+  steps:
+    - name: Do something
+      run: echo hello
+
+branding:
+  icon: star
+  color: blue

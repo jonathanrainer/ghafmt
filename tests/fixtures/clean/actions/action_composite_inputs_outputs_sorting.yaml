@@ -1,0 +1,27 @@
+name: Composite Inputs Outputs
+
+description: Tests input and output sorting
+
+inputs:
+  apple:
+    description: An apple input
+    type: string
+    required: true
+  zebra:
+    description: A zebra input
+    required: false
+    default: wild
+
+outputs:
+  ant:
+    description: Ant output
+    value: ${{ steps.run.outputs.ant }}
+  zoo:
+    description: Zoo output
+    value: ${{ steps.run.outputs.zoo }}
+
+runs:
+  using: composite
+  steps:
+    - name: Run
+      run: echo "running"

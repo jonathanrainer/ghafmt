@@ -1,7 +1,9 @@
 //! Sorts the top-level keys of a GitHub Actions workflow into idiomatic order.
 use fyaml::Document;
 
-use crate::{constants::TOP_LEVEL_KEY_ORDERING, structure_transformers::StructureTransformer};
+use crate::{
+    constants::TOP_LEVEL_WORKFLOW_KEY_ORDERING, structure_transformers::StructureTransformer,
+};
 
 /// Sorts the top-level workflow keys into the canonical GHA ordering.
 pub(crate) struct TopLevelSorter {
@@ -9,11 +11,16 @@ pub(crate) struct TopLevelSorter {
     key_ordering: Vec<String>,
 }
 
+impl TopLevelSorter {
+    /// Creates a `TopLevelSorter` with the given key ordering.
+    pub(crate) fn new(key_ordering: Vec<String>) -> Self {
+        Self { key_ordering }
+    }
+}
+
 impl Default for TopLevelSorter {
     fn default() -> Self {
-        Self {
-            key_ordering: TOP_LEVEL_KEY_ORDERING.map(String::from).to_vec(),
-        }
+        Self::new(TOP_LEVEL_WORKFLOW_KEY_ORDERING.map(String::from).to_vec())
     }
 }
 
@@ -107,6 +114,57 @@ mod tests {
     )]
     fn test_top_level_sorter(#[case] source_doc: Document, #[case] expected: String) {
         let result = TopLevelSorter::default()
+            .process(source_doc)
+            .expect("processing failed")
+            .to_string();
+
+        assert_eq!(result, expected);
+    }
+
+    #[rstest]
+    #[case::action_metadata_reordered(
+        Document::from_string(indoc! {"
+            runs:
+                using: composite
+            outputs:
+                result: value
+            name: My Action
+            description: My action
+            inputs:
+                greeting:
+                    description: A greeting
+        "}.to_string()).expect("test input is valid YAML"),
+        indoc! {"
+            name: My Action
+            description: My action
+            inputs:
+              greeting:
+                description: A greeting
+            outputs:
+              result: value
+            runs:
+              using: composite
+        "}.to_string()
+    )]
+    #[case::unknown_keys_appended(
+        Document::from_string(indoc! {"
+            runs:
+                using: composite
+            name: My Action
+            unknown-key: value
+        "}.to_string()).expect("test input is valid YAML"),
+        indoc! {"
+            name: My Action
+            runs:
+              using: composite
+            unknown-key: value
+        "}.to_string()
+    )]
+    fn test_top_level_sorter_with_new(#[case] source_doc: Document, #[case] expected: String) {
+        let ordering = ["name", "description", "author", "inputs", "outputs", "runs", "branding"]
+            .map(String::from)
+            .to_vec();
+        let result = TopLevelSorter::new(ordering)
             .process(source_doc)
             .expect("processing failed")
             .to_string();

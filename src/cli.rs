@@ -1,6 +1,6 @@
 use clap::{Parser, ValueEnum};
 use patharg::InputArg;
-use strum_macros::Display;
+use strum::Display;
 
 /// Format GitHub Actions workflow files.
 #[derive(Parser, Debug)]

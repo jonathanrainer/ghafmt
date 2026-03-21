@@ -4,10 +4,7 @@ use tracing::{info, trace};
 
 use crate::{
     errors::{Error, Result},
-    presentation_transformers::{
-        JobsBlankLines, PresentationTransformer, StepsBlankLines, TopLevelBlankLines,
-        TopLevelCommentSpacer, VariableSpacer,
-    },
+    presentation_transformers::PresentationTransformer,
 };
 
 /// Converts a processed [`Document`] into a formatted YAML string via the presentation pipeline.
@@ -18,16 +15,8 @@ pub(crate) struct WorkflowEmitter {
 
 impl WorkflowEmitter {
     /// Create a `WorkflowEmitter` with the default presentation transformer pipeline.
-    pub(crate) fn new() -> Self {
-        Self {
-            transformers: vec![
-                Box::new(JobsBlankLines::default()),
-                Box::new(StepsBlankLines::default()),
-                Box::new(TopLevelBlankLines::default()),
-                Box::new(TopLevelCommentSpacer::default()),
-                Box::new(VariableSpacer),
-            ],
-        }
+    pub(crate) fn new(transformers: Vec<Box<dyn PresentationTransformer>>) -> Self {
+        Self { transformers }
     }
     /// Produce the raw [`EmitEvent`] stream from a document using canonical emit settings.
     pub(crate) fn create_event_stream(doc: &Document) -> Result<Vec<EmitEvent>> {

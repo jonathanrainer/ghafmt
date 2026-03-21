@@ -3,7 +3,7 @@
 use std::process::ExitCode;
 
 use clap::Parser;
-use ghafmt::{Ghafmt, cli::Args};
+use ghafmt::{cli::Args, Ghafmt};
 
 /// Parse CLI arguments, format the given workflow file(s), and handle output
 /// according to the selected mode.
@@ -20,5 +20,5 @@ fn main() -> ExitCode {
         .with_max_level(log_level)
         .init();
 
-    Ghafmt::new().run(args.files, args.mode, args.colour, args.quiet)
+    Ghafmt::default().run(args.files, args.mode, args.colour, args.quiet)
 }

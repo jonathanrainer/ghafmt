@@ -1,7 +1,7 @@
 //! Constants defining canonical key orderings and event lists for GHA workflow formatting.
 
 /// Canonical order for top-level GitHub Actions workflow keys.
-pub(crate) const TOP_LEVEL_KEY_ORDERING: [&str; 8] = [
+pub(crate) const TOP_LEVEL_WORKFLOW_KEY_ORDERING: [&str; 8] = [
     "name",
     "run-name",
     "on",
@@ -11,6 +11,20 @@ pub(crate) const TOP_LEVEL_KEY_ORDERING: [&str; 8] = [
     "defaults",
     "jobs",
 ];
+
+/// Canonical order for top-level GitHub Actions action metadata keys.
+pub(crate) const TOP_LEVEL_METADATA_KEY_ORDERING: [&str; 7] = [
+    "name",
+    "description",
+    "author",
+    "inputs",
+    "outputs",
+    "runs",
+    "branding",
+];
+
+/// Canonical order for keys within an action `branding` block.
+pub(crate) const BRANDING_ORDER: [&str; 2] = ["icon", "color"];
 
 /// Canonical order for keys within a `workflow_dispatch` or `workflow_call` input block.
 pub(crate) const INPUT_ORDER: [&str; 5] = ["description", "type", "required", "default", "options"];
@@ -57,4 +71,36 @@ pub(crate) const EVENT_TYPES: [&str; 34] = [
     "workflow_call",
     "workflow_dispatch",
     "workflow_run",
+];
+
+/// Canonical order for keys within the `runs` block of a JavaScript action.
+pub(crate) const JAVASCRIPT_KEY_ORDER: [&str; 6] =
+    ["using", "pre", "pre-if", "main", "post", "post-if"];
+
+/// Canonical order for keys within the `runs` block of a composite action.
+pub(crate) const COMPOSITE_KEY_ORDER: [&str; 2] = ["using", "steps"];
+
+/// Canonical order for keys within the `runs` block of a Docker container action.
+pub(crate) const DOCKER_KEY_ORDER: [&str; 7] = [
+    "using",
+    "image",
+    "args",
+    "env",
+    "pre-entrypoint",
+    "entrypoint",
+    "post-entrypoint",
+];
+/// Canonical key order for the top-level keys of each step.
+pub const STEP_LEVEL_KEY_ORDERING: [&str; 11] = [
+    "name",
+    "id",
+    "if",
+    "uses",
+    "run",
+    "with",
+    "env",
+    "shell",
+    "working-directory",
+    "timeout-minutes",
+    "continue-on-error",
 ];
