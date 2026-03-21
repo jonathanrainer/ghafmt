@@ -8,13 +8,20 @@ pub mod errors;
 use std::{fs::read_to_string, process::ExitCode};
 
 pub use errors::{Error, Result, Warning};
+use fyaml::Document;
 use patharg::InputArg;
 use tracing::info;
 
 use crate::{
     cli::{ColourMode, Mode},
-    commands::{Command, build_handler, render_error},
+    commands::{build_handler, render_error, Command},
     fs::{expand_paths, read_from_stdin},
+    structure_transformers::{
+        CaseEnforcer, ConcurrencySorter, ContainerSorter, DefaultsSorter, EnvSorter,
+        EnvironmentSorter, FilterSorter, JobSorter, NeedsSorter, OnSorter, PermissionsSorter,
+        RunsOnSorter, StepSorter, StrategySorter, StructureTransformer, TopLevelSorter, WithSorter,
+        WorkflowCallSorter, WorkflowDispatchSorter, WorkflowRunSorter,
+    },
     workflow_emitter::WorkflowEmitter,
     workflow_processor::WorkflowProcessor,
 };
@@ -41,10 +48,17 @@ pub(crate) struct FormatterResult {
     pub(crate) warnings: Vec<Warning>,
 }
 
+#[derive(Eq, PartialEq, Hash)]
+enum DocumentType {
+    Unknown,
+    Workflow,
+    CompositeAction,
+    DockerAction,
+    JavascriptAction,
+}
+
 /// Top-level formatter that processes and emits a GitHub Actions workflow file.
 pub struct Ghafmt {
-    /// Applies structure transformers to the parsed document.
-    workflow_processor: WorkflowProcessor,
     /// Applies presentation transformers and serialises the result to YAML.
     workflow_emitter: WorkflowEmitter,
 }
@@ -60,7 +74,6 @@ impl Ghafmt {
     #[must_use]
     pub fn new() -> Self {
         Self {
-            workflow_processor: WorkflowProcessor::default(),
             workflow_emitter: WorkflowEmitter::new(),
         }
     }
@@ -123,17 +136,21 @@ impl Ghafmt {
                 }
             };
 
-            let result = self
-                .format_gha_workflow(&content, name)
-                .map(|(output, warnings)| FormatterResult {
-                    input: file.clone(),
-                    output,
-                    original: content,
-                    warnings,
-                });
-            results.push(result);
+            match Document::parse_str(&content) {
+                Ok(document) => {
+                    let result = self
+                        .format_gha_workflow(document)
+                        .map(|(output, warnings)| FormatterResult {
+                            input: file.clone(),
+                            output,
+                            original: content,
+                            warnings,
+                        });
+                    results.push(result);
+                }
+                Err(e) => results.push(Err(Error::parse_yaml(name, &content, &e))),
+            }
         }
-
         match mode {
             Mode::Format => commands::Format {}.run(&results, colour_mode, quiet),
             Mode::Check => commands::Check {}.run(&results, colour_mode, quiet),
@@ -151,15 +168,52 @@ impl Ghafmt {
     ///
     /// Returns an error if `content` cannot be parsed as valid YAML.
     /// Transformer failures are returned as warnings rather than errors.
-    pub fn format_gha_workflow(
-        &mut self,
-        content: &str,
-        name: &str,
-    ) -> Result<(String, Vec<Warning>)> {
+    pub fn format_gha_workflow(&mut self, doc: Document) -> Result<(String, Vec<Warning>)> {
         info!("Beginning Document Processing...");
-        let (yaml, warnings) = self.workflow_processor.process(content, name)?;
+        let workflow_processor = WorkflowProcessor::new(self.get_transformers(&doc));
+        let (yaml, warnings) = workflow_processor.process(doc)?;
         info!("Emitting workflow...");
         let yaml_string = self.workflow_emitter.emit(&yaml)?;
         Ok((yaml_string, warnings))
+    }
+
+    pub(crate) fn get_transformers(
+        &self,
+        document: &Document,
+    ) -> Vec<Box<dyn StructureTransformer>> {
+        let document_type = match document.at_path("/runs/using") {
+            None => match document.at_path("/on") {
+                None => DocumentType::Unknown,
+                Some(_) => DocumentType::Workflow,
+            },
+            Some(_) => DocumentType::Unknown,
+        };
+        match document_type {
+            DocumentType::Unknown => vec![],
+            DocumentType::Workflow => vec![
+                Box::new(TopLevelSorter::default()),
+                Box::new(JobSorter::default()),
+                Box::new(StepSorter::default()),
+                Box::new(OnSorter::default()),
+                Box::new(WorkflowDispatchSorter::default()),
+                Box::new(WithSorter),
+                Box::new(WorkflowCallSorter::default()),
+                Box::new(WorkflowRunSorter::default()),
+                Box::new(PermissionsSorter),
+                Box::new(EnvSorter),
+                Box::new(DefaultsSorter),
+                Box::new(ConcurrencySorter::default()),
+                Box::new(EnvironmentSorter::default()),
+                Box::new(NeedsSorter::default()),
+                Box::new(RunsOnSorter::default()),
+                Box::new(FilterSorter::default()),
+                Box::new(StrategySorter::default()),
+                Box::new(ContainerSorter::default()),
+                Box::new(CaseEnforcer::new(heck::ToSnakeCase::to_snake_case)),
+            ],
+            DocumentType::CompositeAction => vec![],
+            DocumentType::DockerAction => vec![],
+            DocumentType::JavascriptAction => vec![],
+        }
     }
 }

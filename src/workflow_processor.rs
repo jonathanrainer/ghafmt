@@ -4,12 +4,7 @@ use tracing::{info, warn};
 
 use crate::{
     errors::{Error, Result, Warning},
-    structure_transformers::{
-        CaseEnforcer, ConcurrencySorter, ContainerSorter, DefaultsSorter, EnvSorter,
-        EnvironmentSorter, FilterSorter, JobSorter, NeedsSorter, OnSorter, PermissionsSorter,
-        RunsOnSorter, StepSorter, StrategySorter, StructureTransformer, TopLevelSorter, WithSorter,
-        WorkflowCallSorter, WorkflowDispatchSorter, WorkflowRunSorter,
-    },
+    structure_transformers::StructureTransformer,
 };
 
 /// Applies the ordered sequence of [`StructureTransformer`]s to a parsed workflow document.
@@ -26,10 +21,7 @@ impl WorkflowProcessor {
 
     /// Parse `content` (identified as `name` in diagnostics), apply all transformers,
     /// and return the result.
-    pub(crate) fn process(&self, content: &str, name: &str) -> Result<(Document, Vec<Warning>)> {
-        let parse_result = Document::parse_str(content);
-        let mut document = parse_result.map_err(|e| Error::parse_yaml(name, content, &e))?;
-
+    pub(crate) fn process(&self, mut document: Document) -> Result<(Document, Vec<Warning>)> {
         let mut warnings: Vec<Warning> = vec![];
 
         for transformer in &self.transformers {
@@ -57,32 +49,6 @@ impl WorkflowProcessor {
         }
 
         Ok((document, warnings))
-    }
-}
-
-impl Default for WorkflowProcessor {
-    fn default() -> Self {
-        Self::new(vec![
-            Box::new(TopLevelSorter::default()),
-            Box::new(JobSorter::default()),
-            Box::new(StepSorter::default()),
-            Box::new(OnSorter::default()),
-            Box::new(WorkflowDispatchSorter::default()),
-            Box::new(WithSorter),
-            Box::new(WorkflowCallSorter::default()),
-            Box::new(WorkflowRunSorter::default()),
-            Box::new(PermissionsSorter),
-            Box::new(EnvSorter),
-            Box::new(DefaultsSorter),
-            Box::new(ConcurrencySorter::default()),
-            Box::new(EnvironmentSorter::default()),
-            Box::new(NeedsSorter::default()),
-            Box::new(RunsOnSorter::default()),
-            Box::new(FilterSorter::default()),
-            Box::new(StrategySorter::default()),
-            Box::new(ContainerSorter::default()),
-            Box::new(CaseEnforcer::new(heck::ToSnakeCase::to_snake_case)),
-        ])
     }
 }
 
@@ -134,7 +100,8 @@ mod tests {
     #[test]
     fn failed_transformer_produces_warning() {
         let proc = WorkflowProcessor::new(vec![Box::new(AlwaysFail)]);
-        let (_, warnings) = proc.process("a: b\n", "test").expect("process failed");
+        let starter_doc = Document::from_string("a: b\n".to_string()).expect("valid YAML");
+        let (_, warnings) = proc.process(starter_doc).expect("process failed");
         assert_eq!(warnings.len(), 1);
         assert!(
             matches!(&warnings[0], Warning::StructureTransform { transformer, .. } if *transformer == "always-fail")
@@ -145,7 +112,8 @@ mod tests {
     fn failed_transformer_document_is_restored() {
         // AlwaysFail runs but fails; the document should be unchanged after it.
         let proc = WorkflowProcessor::new(vec![Box::new(AlwaysFail)]);
-        let (doc, _) = proc.process("a: b\n", "test").expect("process failed");
+        let starter_doc = Document::from_string("a: b\n".to_string()).expect("valid YAML");
+        let (doc, _) = proc.process(starter_doc).expect("process failed");
         assert_eq!(doc.to_string(), "a: b\n");
     }
 
@@ -158,7 +126,8 @@ mod tests {
             Box::new(AlwaysFail),
             Box::new(AppendMarker { key: "after" }),
         ]);
-        let (doc, warnings) = proc.process("a: b\n", "test").expect("process failed");
+        let starter_doc = Document::from_string("a: b\n".to_string()).expect("valid YAML");
+        let (doc, warnings) = proc.process(starter_doc).expect("process failed");
         let output = doc.to_string();
         assert_eq!(warnings.len(), 1);
         assert!(output.contains("before"), "expected 'before' in: {output}");

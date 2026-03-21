@@ -1,5 +1,6 @@
 use std::{fs::read_to_string, path::PathBuf};
 
+use fyaml::Document;
 use ghafmt::Ghafmt;
 use rstest::rstest;
 use similar_asserts::assert_eq;
@@ -20,8 +21,10 @@ fn test_formatter(#[files("tests/fixtures/dirty/*.yaml")] path: PathBuf) {
     let mut formatter = Ghafmt::new();
 
     let content = read_to_string(&path).expect("Could not read test file");
+    let doc = Document::from_string(content).expect("Should be valid YAML");
+
     let (formatted, _) = formatter
-        .format_gha_workflow(&content, &clean_file_name)
+        .format_gha_workflow(doc)
         .expect("Could not format workflow");
 
     assert_eq!(clean_file_contents, formatted);
