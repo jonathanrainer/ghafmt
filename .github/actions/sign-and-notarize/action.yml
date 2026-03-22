@@ -1,0 +1,66 @@
+name: Sign and Notarize macOS Binary
+
+description: Signs a macOS binary with a Developer ID certificate and notarizes it with Apple.
+
+inputs:
+  api-issuer-id:
+    description: App Store Connect API Issuer ID
+    required: true
+  api-key-id:
+    description: App Store Connect API Key ID
+    required: true
+  api-key-p8:
+    description: Base64-encoded App Store Connect API key .p8 file
+    required: true
+  binary-path:
+    description: Path to the binary to sign and notarize
+    required: true
+  certificate-p12:
+    description: Base64-encoded Developer ID Application .p12 certificate
+    required: true
+  certificate-password:
+    description: Password for the .p12 certificate
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Import signing certificate
+      uses: Apple-Actions/import-codesign-certs@fe74d46e82474f87e1ba79832ad28a4013d0e33a # v6
+      with:
+        p12-file-base64: ${{ inputs.certificate-p12 }}
+        p12-password: ${{ inputs.certificate-password }}
+
+    - name: Sign binary
+      run: |
+        IDENTITY=$(security find-identity -v -p codesigning \
+          | grep 'Developer ID Application' | head -1 \
+          | sed -E 's/.*"(.+)"/\1/')
+        codesign \
+          --sign "$IDENTITY" \
+          --options runtime \
+          --timestamp \
+          --force \
+          "${{ inputs.binary-path }}"
+        codesign --verify --verbose "${{ inputs.binary-path }}"
+      shell: bash
+
+    - name: Notarize binary
+      run: |
+        KEY_FILE=$(mktemp)
+        ZIP_FILE=$(mktemp).zip
+        trap "rm -f '$KEY_FILE' '$ZIP_FILE'" EXIT
+        chmod 600 "$KEY_FILE"
+        echo "$API_KEY_P8" | base64 --decode > "$KEY_FILE"
+        zip "$ZIP_FILE" "$BINARY_PATH"
+        xcrun notarytool submit "$ZIP_FILE" \
+          --key "$KEY_FILE" \
+          --key-id "$API_KEY_ID" \
+          --issuer "$API_ISSUER_ID" \
+          --wait
+      env:
+        API_KEY_P8: ${{ inputs.api-key-p8 }}
+        API_KEY_ID: ${{ inputs.api-key-id }}
+        API_ISSUER_ID: ${{ inputs.api-issuer-id }}
+        BINARY_PATH: ${{ inputs.binary-path }}
+      shell: bash

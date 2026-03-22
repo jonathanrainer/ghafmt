@@ -68,6 +68,17 @@ jobs:
         if: runner.os != 'Linux'
         run: cargo build --release --target ${{ matrix.target }}
 
+      - name: Sign and notarize binary
+        if: runner.os == 'macOS' && github.ref == 'refs/heads/main'
+        uses: ./.github/actions/sign-and-notarize
+        with:
+          api-issuer-id: ${{ secrets.APPLE_API_ISSUER_ID }}
+          api-key-id: ${{ secrets.APPLE_API_KEY_ID }}
+          api-key-p8: ${{ secrets.APPLE_API_KEY_P8 }}
+          binary-path: target/${{ matrix.target }}/release/ghafmt
+          certificate-p12: ${{ secrets.APPLE_CERTIFICATE_P12 }}
+          certificate-password: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+
       - name: Compute artifact prefix
         id: version
         run: |
