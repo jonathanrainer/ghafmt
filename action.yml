@@ -1,19 +1,18 @@
 name: ghafmt
-description: Format GitHub Actions workflow files
+
+description: Format GitHub Actions workflow and action metadata files
+
 author: jonathanrainer
-branding:
-  icon: check-square
-  color: blue
 
 inputs:
-  path:
-    description: Path to workflow file(s) or directory to format
-    required: false
-    default: .github/workflows/
   mode:
     description: 'Mode to run: check, write, or list'
     required: false
     default: check
+  path:
+    description: Path to workflow file(s) or directory to format
+    required: false
+    default: .github/workflows/
   version:
     description: Release version to download (e.g. 0.2.0). Defaults to latest release.
     required: false
@@ -23,10 +22,6 @@ runs:
   using: composite
   steps:
     - name: Download ghafmt
-      shell: bash
-      env:
-        GH_TOKEN: ${{ github.token }}
-        INPUT_VERSION: ${{ inputs.version }}
       run: |
         VERSION="$INPUT_VERSION"
         if [ "$VERSION" = "latest" ]; then
@@ -55,10 +50,21 @@ runs:
         fi
         tar -xz -C "$RUNNER_TEMP" -f "$TARBALL"
         echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
+      env:
+        GH_TOKEN: ${{ github.token }}
+        INPUT_VERSION: ${{ inputs.version }}
+      shell: bash
 
     - name: Run ghafmt
-      shell: bash
+      run: |
+        mapfile -t ACTION_FILES < <(find . \( -name "action.yml" -o -name "action.yaml" \) \
+          ! -path '*/.git/*' ! -path '*/node_modules/*' 2>/dev/null)
+        ghafmt "--${INPUT_MODE}" "${INPUT_PATH}" "${ACTION_FILES[@]}"
       env:
         INPUT_MODE: ${{ inputs.mode }}
         INPUT_PATH: ${{ inputs.path }}
-      run: ghafmt "--${INPUT_MODE}" "${INPUT_PATH}"
+      shell: bash
+
+branding:
+  icon: check-square
+  color: blue

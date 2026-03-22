@@ -1,15 +1,16 @@
 # ghafmt
 
-A formatter for GitHub Actions workflow files.
+A formatter for GitHub Actions workflow and action metadata files.
 
 [![CI](https://github.com/jonathanrainer/ghafmt/actions/workflows/code_checks.yml/badge.svg)](https://github.com/jonathanrainer/ghafmt/actions/workflows/code_checks.yml)
 [![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](LICENSE-MIT)
 
-`ghafmt` enforces a consistent style across your GitHub Actions workflow YAML files. It reorders keys within steps,
-sorts top-level and trigger blocks, inserts blank lines between steps and jobs, and converts job and step IDs to
-`snake_case` — so code review diffs show only meaningful changes, not formatting noise.
+`ghafmt` enforces a consistent style across your GitHub Actions YAML files — both workflow files and action metadata
+files (`action.yml` / `action.yaml`). It reorders keys, sorts blocks alphabetically, inserts blank lines between
+steps and jobs, and converts IDs to `snake_case` — so code review diffs show only meaningful changes, not formatting
+noise.
 
-**Formatting rules applied:**
+**Workflow formatting rules:**
 
 - Step keys reordered to: `name` → `uses`/`run` → `id` → `with`/`env`
 - Top-level workflow keys sorted (`name` → `on` → `env` → `jobs`)
@@ -17,6 +18,15 @@ sorts top-level and trigger blocks, inserts blank lines between steps and jobs, 
 - Blank lines inserted between top-level keys, jobs, and steps
 - Job IDs and step IDs converted to `snake_case`
 - Keys within `with`, `env`, `permissions`, and similar maps sorted alphabetically
+
+**Action metadata formatting rules (`action.yml` / `action.yaml`):**
+
+- Top-level keys sorted to canonical order: `name` → `description` → `author` → `inputs` → `outputs` → `runs` → `branding`
+- `inputs` and `outputs` sorted alphabetically; per-entry keys sorted idiomatically
+- `runs` keys sorted by action type: composite (`using` → `steps`), JavaScript (`using` → `pre` → `pre-if` → `main` → `post` → `post-if`), Docker (`using` → `image` → `args` → `env` → `pre-entrypoint` → `entrypoint` → `post-entrypoint`)
+- Step keys and `with` maps inside composite action steps sorted alphabetically
+- Step IDs converted to `snake_case`
+- `branding` keys sorted (`icon` → `color`)
 
 ## Before / After
 
@@ -166,7 +176,8 @@ docker run --rm -v "$PWD":/work ghcr.io/jonathanrainer/ghafmt:latest --mode=chec
 
 ### GitHub Actions
 
-Use the bundled action — it downloads the correct pre-built binary for the runner platform:
+Use the bundled action — it downloads the correct pre-built binary for the runner platform and automatically
+discovers both workflow files and any `action.yml`/`action.yaml` files in the repository:
 
 ```yaml
 - uses: jonathanrainer/ghafmt@v0.2.0
@@ -207,8 +218,8 @@ repos:
         name: ghafmt
         language: system
         entry: ghafmt --mode=check
-        pass_filenames: false
-        files: ^\.github/workflows/
+        pass_filenames: true
+        files: ^(\.github/workflows/.*\.ya?ml|(.*\/)?action\.ya?ml)$
 ```
 
 ## Contributing

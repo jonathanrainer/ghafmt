@@ -31,4 +31,7 @@ jobs:
         run: cargo build --release
 
       - name: Check workflow formatting
-        run: ./target/release/ghafmt --mode=check .github/workflows/
+        run: |
+          mapfile -t ACTION_FILES < <(find . \( -name "action.yml" -o -name "action.yaml" \) \
+            ! -path '*/.git/*' ! -path '*/node_modules/*' 2>/dev/null)
+          ./target/release/ghafmt --mode=check .github/workflows/ "${ACTION_FILES[@]}"
