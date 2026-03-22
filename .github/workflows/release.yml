@@ -7,16 +7,13 @@ on:
     types:
       - closed
 
-permissions:
-  contents: write
-  issues: write
-  packages: write
-
 jobs:
   setup:
     name: Compute Version
     if: github.head_ref == 'release' && github.event.pull_request.merged == true
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     outputs:
       version: ${{ steps.version.outputs.version }}
     steps:
@@ -33,6 +30,8 @@ jobs:
     name: Build Artifacts
     needs: setup
     if: github.head_ref == 'release' && github.event.pull_request.merged == true
+    permissions:
+      contents: read
     uses: ./.github/workflows/_build_artifacts.yml
     with:
       version: ${{ needs.setup.outputs.version }}
@@ -54,6 +53,9 @@ jobs:
     name: Release
     needs: [build_artifacts, build_docker, setup]
     runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      issues: write
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
