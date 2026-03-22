@@ -222,6 +222,13 @@ repos:
         files: ^(\.github/workflows/.*\.ya?ml|(.*\/)?action\.ya?ml)$
 ```
 
+## Acknowledgements
+
+`ghafmt` is built on top of two foundational projects:
+
+- [**libfyaml**](https://github.com/pantoniou/libfyaml) by [@pantoniou](https://github.com/pantoniou) — the YAML parser and emitter at the core of this tool. [@pantoniou](https://github.com/pantoniou) has been exceptionally generous in reviewing and merging patches to support `ghafmt`'s use case.
+- [**fyaml**](https://github.com/0k/fyaml) by [@0k](https://github.com/0k) — the Rust bindings to libfyaml that make it possible to use from this codebase.
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
