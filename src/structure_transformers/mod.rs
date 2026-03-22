@@ -1,4 +1,5 @@
 //! Structure transformers that reorder or rename nodes in a parsed YAML workflow document.
+mod branding_sorter;
 mod case_enforcer;
 mod concurrency_sorter;
 mod container_sorter;
@@ -6,11 +7,14 @@ mod defaults_sorter;
 mod env_sorter;
 mod environment_sorter;
 mod filter_sorter;
+mod inputs_sorter;
 mod job_sorter;
 mod needs_sorter;
 mod on_sorter;
+mod outputs_sorter;
 mod permissions_sorter;
 mod runs_on_sorter;
+mod runs_sorter;
 mod step_sorter;
 mod strategy_sorter;
 mod top_level_sorter;
@@ -21,6 +25,7 @@ mod workflow_run_sorter;
 
 use std::collections::HashMap;
 
+pub(crate) use branding_sorter::BrandingSorter;
 pub(crate) use case_enforcer::CaseEnforcer;
 pub(crate) use concurrency_sorter::ConcurrencySorter;
 pub(crate) use container_sorter::ContainerSorter;
@@ -29,11 +34,14 @@ pub(crate) use env_sorter::EnvSorter;
 pub(crate) use environment_sorter::EnvironmentSorter;
 pub(crate) use filter_sorter::FilterSorter;
 use fyaml::Document;
+pub(crate) use inputs_sorter::InputsSorter;
 pub(crate) use job_sorter::JobSorter;
 pub(crate) use needs_sorter::NeedsSorter;
 pub(crate) use on_sorter::OnSorter;
+pub(crate) use outputs_sorter::OutputsSorter;
 pub(crate) use permissions_sorter::PermissionsSorter;
 pub(crate) use runs_on_sorter::RunsOnSorter;
+pub(crate) use runs_sorter::RunsSorter;
 pub(crate) use step_sorter::StepSorter;
 pub(crate) use strategy_sorter::StrategySorter;
 pub(crate) use top_level_sorter::TopLevelSorter;

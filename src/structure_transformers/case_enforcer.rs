@@ -252,7 +252,10 @@ impl CaseEnforcer {
             Regex::new(r"^/on/workflow_call/outputs/[^/]+$").unwrap(),
             Regex::new(r"^/on/workflow_call/secrets/[^/]+$").unwrap(),
         ];
-        let value_regexes = vec![Regex::new(r"^/jobs/[^/]+/steps/[0-9]+/id$").unwrap()];
+        let value_regexes = vec![
+            Regex::new(r"^/jobs/[^/]+/steps/[0-9]+/id$").unwrap(),
+            Regex::new(r"^/runs/steps/[0-9]+/id$").unwrap(),
+        ];
 
         let id = ID_PATTERN;
         let ref_kinds = vec![

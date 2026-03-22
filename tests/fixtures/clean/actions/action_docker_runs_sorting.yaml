@@ -1,0 +1,19 @@
+name: Docker Action
+
+description: Tests Docker runs key ordering
+
+inputs:
+  name:
+    description: Name to greet
+    required: true
+
+runs:
+  using: docker
+  image: Dockerfile
+  args:
+    - ${{ inputs.name }}
+  env:
+    INPUT_NAME: ${{ inputs.name }}
+  pre-entrypoint: setup.sh
+  entrypoint: entrypoint.sh
+  post-entrypoint: cleanup.sh

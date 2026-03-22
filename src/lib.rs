@@ -1,22 +1,39 @@
 //! Library entry point for `ghafmt`.
 //!
 //! Exposes [`Ghafmt`], which orchestrates the structure-transformation and
-//! presentation-transformation pipeline for GitHub Actions workflow files.
+//! presentation-transformation pipeline for GitHub Actions files.
 mod constants;
 pub mod errors;
 
 use std::{fs::read_to_string, process::ExitCode};
 
 pub use errors::{Error, Result, Warning};
+use fyaml::Document;
 use patharg::InputArg;
-use tracing::info;
+use strum::Display;
+use tracing::{info, warn};
 
 use crate::{
     cli::{ColourMode, Mode},
     commands::{Command, build_handler, render_error},
+    constants::{
+        COMPOSITE_KEY_ORDER, DOCKER_KEY_ORDER, JAVASCRIPT_KEY_ORDER,
+        TOP_LEVEL_METADATA_KEY_ORDERING,
+    },
     fs::{expand_paths, read_from_stdin},
-    workflow_emitter::WorkflowEmitter,
-    workflow_processor::WorkflowProcessor,
+    presentation_pipeline::PresentationPipeline,
+    presentation_transformers::{
+        JobsBlankLines, PresentationTransformer, StepsBlankLines, TopLevelBlankLines,
+        TopLevelCommentSpacer, VariableSpacer,
+    },
+    structure_pipeline::StructurePipeline,
+    structure_transformers::{
+        BrandingSorter, CaseEnforcer, ConcurrencySorter, ContainerSorter, DefaultsSorter,
+        EnvSorter, EnvironmentSorter, FilterSorter, InputsSorter, JobSorter, NeedsSorter, OnSorter,
+        OutputsSorter, PermissionsSorter, RunsOnSorter, RunsSorter, StepSorter, StrategySorter,
+        StructureTransformer, TopLevelSorter, WithSorter, WorkflowCallSorter,
+        WorkflowDispatchSorter, WorkflowRunSorter,
+    },
 };
 
 pub mod cli;
@@ -24,10 +41,16 @@ pub mod cli;
 pub(crate) mod commands;
 /// File-system helpers: path expansion, atomic writes, and stdin reading.
 mod fs;
+mod presentation_pipeline;
 mod presentation_transformers;
+mod structure_pipeline;
 mod structure_transformers;
-mod workflow_emitter;
-mod workflow_processor;
+
+/// Structure and presentation transformer pipelines for a single document.
+pub(crate) type TransformerPipeline = (
+    Vec<Box<dyn StructureTransformer>>,
+    Vec<Box<dyn PresentationTransformer>>,
+);
 
 /// The formatted output and any advisory warnings produced for one file.
 pub(crate) struct FormatterResult {
@@ -41,30 +64,27 @@ pub(crate) struct FormatterResult {
     pub(crate) warnings: Vec<Warning>,
 }
 
-/// Top-level formatter that processes and emits a GitHub Actions workflow file.
-pub struct Ghafmt {
-    /// Applies structure transformers to the parsed document.
-    workflow_processor: WorkflowProcessor,
-    /// Applies presentation transformers and serialises the result to YAML.
-    workflow_emitter: WorkflowEmitter,
+#[derive(Eq, PartialEq, Hash, Display)]
+/// Discriminates between file types that require different transformer pipelines.
+enum DocumentType {
+    /// No recognised top-level key found; pass through with presentation transforms only.
+    Unknown,
+    /// Standard GitHub Actions workflow file (has an `on:` key).
+    Workflow,
+    /// Composite action (`runs.using: composite`).
+    CompositeAction,
+    /// Docker container action (`runs.using: docker`).
+    DockerAction,
+    /// JavaScript action (`runs.using: node*`).
+    JavascriptAction,
 }
 
-impl Default for Ghafmt {
-    fn default() -> Self {
-        Self::new()
-    }
-}
+/// Top-level formatter that processes and emits GitHub Actions files.
+#[derive(Default)]
+pub struct Ghafmt {}
 
 impl Ghafmt {
     /// Create a new `Ghafmt` instance with the default transformer pipeline.
-    #[must_use]
-    pub fn new() -> Self {
-        Self {
-            workflow_processor: WorkflowProcessor::default(),
-            workflow_emitter: WorkflowEmitter::new(),
-        }
-    }
-
     #[must_use]
     pub fn run(
         &mut self,
@@ -123,17 +143,21 @@ impl Ghafmt {
                 }
             };
 
-            let result = self
-                .format_gha_workflow(&content, name)
-                .map(|(output, warnings)| FormatterResult {
-                    input: file.clone(),
-                    output,
-                    original: content,
-                    warnings,
-                });
-            results.push(result);
+            match Document::parse_str(&content) {
+                Ok(document) => {
+                    let result =
+                        self.format_gha_document(document, file)
+                            .map(|(output, warnings)| FormatterResult {
+                                input: file.clone(),
+                                output,
+                                original: content,
+                                warnings,
+                            });
+                    results.push(result);
+                }
+                Err(e) => results.push(Err(Error::parse_yaml(name, &content, &e))),
+            }
         }
-
         match mode {
             Mode::Format => commands::Format {}.run(&results, colour_mode, quiet),
             Mode::Check => commands::Check {}.run(&results, colour_mode, quiet),
@@ -142,7 +166,7 @@ impl Ghafmt {
         }
     }
 
-    /// Format a GitHub Actions workflow from a string and return the formatted YAML
+    /// Format a GitHub Actions document and return the formatted YAML
     /// along with any non-fatal warnings produced during processing.
     ///
     /// `name` is used only in diagnostic output (e.g. `"<stdin>"`).
@@ -151,15 +175,166 @@ impl Ghafmt {
     ///
     /// Returns an error if `content` cannot be parsed as valid YAML.
     /// Transformer failures are returned as warnings rather than errors.
-    pub fn format_gha_workflow(
+    pub fn format_gha_document(
         &mut self,
-        content: &str,
-        name: &str,
+        doc: Document,
+        path: &InputArg,
     ) -> Result<(String, Vec<Warning>)> {
         info!("Beginning Document Processing...");
-        let (yaml, warnings) = self.workflow_processor.process(content, name)?;
-        info!("Emitting workflow...");
-        let yaml_string = self.workflow_emitter.emit(&yaml)?;
+        let (structure_transformers, presentation_transformers) =
+            Ghafmt::get_transformers(&doc, path);
+        let pipeline = StructurePipeline::new(structure_transformers);
+        let (yaml, warnings) = pipeline.process(doc)?;
+        info!("Emitting document...");
+        let mut emitter = PresentationPipeline::new(presentation_transformers);
+        let yaml_string = emitter.emit(&yaml)?;
         Ok((yaml_string, warnings))
+    }
+
+    /// Detects the document type and returns the structure and presentation transformer pipelines.
+    #[allow(clippy::too_many_lines)]
+    pub(crate) fn get_transformers(document: &Document, path: &InputArg) -> TransformerPipeline {
+        let document_type = match document.at_path("/runs/using") {
+            None => match document.at_path("/on") {
+                None => {
+                    warn!(
+                        "Could not find 'runs/using' or '/on' in the document, defaulting to Unknown"
+                    );
+                    DocumentType::Unknown
+                }
+                Some(_) => DocumentType::Workflow,
+            },
+            Some(using) => match using.scalar_str() {
+                Ok(key) => match key {
+                    "node20" | "node24" => DocumentType::JavascriptAction,
+                    "composite" => DocumentType::CompositeAction,
+                    "docker" => DocumentType::DockerAction,
+                    s => {
+                        warn!(
+                            "Could not match value set for 'using' - '{s}' defaulting to Unknown"
+                        );
+                        DocumentType::Unknown
+                    }
+                },
+                Err(e) => {
+                    eprintln!("error: {e}");
+                    warn!("An error occurred while reading the YAML file, defaulting to Unknown");
+                    DocumentType::Unknown
+                }
+            },
+        };
+        info!("Detected {path} as {document_type}");
+        match document_type {
+            DocumentType::Unknown => (
+                vec![],
+                vec![
+                    Box::new(JobsBlankLines::default()),
+                    Box::new(StepsBlankLines::default()),
+                    Box::new(TopLevelBlankLines::default()),
+                    Box::new(TopLevelCommentSpacer::default()),
+                    Box::new(VariableSpacer),
+                ],
+            ),
+            DocumentType::Workflow => (
+                vec![
+                    Box::new(TopLevelSorter::default()),
+                    Box::new(JobSorter::default()),
+                    Box::new(StepSorter::default()),
+                    Box::new(OnSorter::default()),
+                    Box::new(WorkflowDispatchSorter::default()),
+                    Box::new(WithSorter),
+                    Box::new(WorkflowCallSorter::default()),
+                    Box::new(WorkflowRunSorter::default()),
+                    Box::new(PermissionsSorter),
+                    Box::new(EnvSorter),
+                    Box::new(DefaultsSorter),
+                    Box::new(ConcurrencySorter::default()),
+                    Box::new(EnvironmentSorter::default()),
+                    Box::new(NeedsSorter::default()),
+                    Box::new(RunsOnSorter::default()),
+                    Box::new(FilterSorter::default()),
+                    Box::new(StrategySorter::default()),
+                    Box::new(ContainerSorter::default()),
+                    Box::new(CaseEnforcer::new(heck::ToSnakeCase::to_snake_case)),
+                ],
+                vec![
+                    Box::new(JobsBlankLines::default()),
+                    Box::new(StepsBlankLines::default()),
+                    Box::new(TopLevelBlankLines::default()),
+                    Box::new(TopLevelCommentSpacer::default()),
+                    Box::new(VariableSpacer),
+                ],
+            ),
+            DocumentType::CompositeAction => (
+                vec![
+                    Box::new(TopLevelSorter::new(
+                        TOP_LEVEL_METADATA_KEY_ORDERING.map(String::from).to_vec(),
+                    )),
+                    Box::new(InputsSorter::default()),
+                    Box::new(OutputsSorter::default()),
+                    Box::new(RunsSorter::new(
+                        COMPOSITE_KEY_ORDER.map(String::from).to_vec(),
+                    )),
+                    Box::new(StepSorter::default()),
+                    Box::new(BrandingSorter::default()),
+                    Box::new(CaseEnforcer::new(heck::ToSnakeCase::to_snake_case)),
+                ],
+                vec![
+                    Box::new(JobsBlankLines::default()),
+                    Box::new(StepsBlankLines::new(2)),
+                    Box::new(TopLevelBlankLines::new(
+                        TOP_LEVEL_METADATA_KEY_ORDERING.map(String::from).to_vec(),
+                    )),
+                    Box::new(TopLevelCommentSpacer::default()),
+                    Box::new(VariableSpacer),
+                ],
+            ),
+            DocumentType::DockerAction => (
+                vec![
+                    Box::new(TopLevelSorter::new(
+                        TOP_LEVEL_METADATA_KEY_ORDERING.map(String::from).to_vec(),
+                    )),
+                    Box::new(InputsSorter::default()),
+                    Box::new(OutputsSorter::default()),
+                    Box::new(RunsSorter::new(DOCKER_KEY_ORDER.map(String::from).to_vec())),
+                    Box::new(StepSorter::default()),
+                    Box::new(BrandingSorter::default()),
+                    Box::new(CaseEnforcer::new(heck::ToSnakeCase::to_snake_case)),
+                ],
+                vec![
+                    Box::new(JobsBlankLines::default()),
+                    Box::new(StepsBlankLines::new(2)),
+                    Box::new(TopLevelBlankLines::new(
+                        TOP_LEVEL_METADATA_KEY_ORDERING.map(String::from).to_vec(),
+                    )),
+                    Box::new(TopLevelCommentSpacer::default()),
+                    Box::new(VariableSpacer),
+                ],
+            ),
+            DocumentType::JavascriptAction => (
+                vec![
+                    Box::new(TopLevelSorter::new(
+                        TOP_LEVEL_METADATA_KEY_ORDERING.map(String::from).to_vec(),
+                    )),
+                    Box::new(InputsSorter::default()),
+                    Box::new(OutputsSorter::default()),
+                    Box::new(RunsSorter::new(
+                        JAVASCRIPT_KEY_ORDER.map(String::from).to_vec(),
+                    )),
+                    Box::new(StepSorter::default()),
+                    Box::new(BrandingSorter::default()),
+                    Box::new(CaseEnforcer::new(heck::ToSnakeCase::to_snake_case)),
+                ],
+                vec![
+                    Box::new(JobsBlankLines::default()),
+                    Box::new(StepsBlankLines::new(2)),
+                    Box::new(TopLevelBlankLines::new(
+                        TOP_LEVEL_METADATA_KEY_ORDERING.map(String::from).to_vec(),
+                    )),
+                    Box::new(TopLevelCommentSpacer::default()),
+                    Box::new(VariableSpacer),
+                ],
+            ),
+        }
     }
 }

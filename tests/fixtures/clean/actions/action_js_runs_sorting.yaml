@@ -1,0 +1,16 @@
+name: JavaScript Action
+
+description: Tests JavaScript runs key ordering
+
+inputs:
+  greeting:
+    description: Who to greet
+    required: true
+
+runs:
+  using: node20
+  pre: dist/setup.js
+  pre-if: runner.os == 'Linux'
+  main: dist/index.js
+  post: dist/cleanup.js
+  post-if: always()

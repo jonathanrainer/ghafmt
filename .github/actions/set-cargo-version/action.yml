@@ -1,4 +1,5 @@
 name: Set Cargo Version
+
 description: Sets the package version in Cargo.toml
 
 inputs:
@@ -10,8 +11,6 @@ runs:
   using: composite
   steps:
     - name: Set version in Cargo.toml
-      env:
-        VERSION: ${{ inputs.version }}
       run: |
         YQ=yq
         # Test whether the installed yq supports TOML output (older versions on ubuntu-24.04-arm do not).
@@ -39,4 +38,6 @@ runs:
           echo "::notice::Installed yq now supports TOML output on this aarch64 Linux runner. The download workaround in .github/actions/set-cargo-version/action.yml is no longer needed and can be removed."
         fi
         "$YQ" -i -p toml -o toml '.package.version = strenv(VERSION)' Cargo.toml
+      env:
+        VERSION: ${{ inputs.version }}
       shell: bash

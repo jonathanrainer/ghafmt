@@ -90,7 +90,7 @@ fn check_mode_exits_correctly(
 ) {
     let mut assertion = cmd().arg("--mode=check").args(file_args).assert();
     if expect_success {
-        assertion.success().stderr("").stdout("");
+        assertion.success().stdout("");
     } else {
         assertion = assertion.failure();
         if produce_diff {

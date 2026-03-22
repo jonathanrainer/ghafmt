@@ -1,0 +1,17 @@
+name: Composite Steps
+description: Tests step key and with sorting
+runs:
+  using: composite
+  steps:
+    - run: echo "build"
+      env:
+        FOO: bar
+      id: build-step
+      name: Build
+      if: always()
+    - with:
+        token: ${{ inputs.token }}
+        depth: 1
+      uses: actions/checkout@v4
+      name: Checkout
+      id: checkout-step

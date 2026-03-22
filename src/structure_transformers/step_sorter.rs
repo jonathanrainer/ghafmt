@@ -1,24 +1,10 @@
 //! Sorts the keys of each step within a job into idiomatic order.
 use fyaml::Document;
 
-use crate::structure_transformers::{
-    StructureTransformer, for_each_mapping_child, for_each_seq_element,
+use crate::{
+    constants::STEP_LEVEL_KEY_ORDERING,
+    structure_transformers::{StructureTransformer, for_each_mapping_child, for_each_seq_element},
 };
-
-/// Canonical key order for the top-level keys of each step.
-const STEP_LEVEL_KEY_ORDERING: [&str; 11] = [
-    "name",
-    "id",
-    "if",
-    "uses",
-    "run",
-    "with",
-    "env",
-    "shell",
-    "working-directory",
-    "timeout-minutes",
-    "continue-on-error",
-];
 
 /// Sorts the keys of each step into the canonical GHA ordering.
 pub(crate) struct StepSorter {
@@ -36,8 +22,8 @@ impl Default for StepSorter {
 
 impl StructureTransformer for StepSorter {
     fn process(&self, mut doc: Document) -> fyaml::Result<Document> {
-        doc = for_each_mapping_child(doc, "/jobs", |doc, job_path| {
-            for_each_seq_element(doc, &format!("{job_path}/steps"), |doc, step_path| {
+        doc = for_each_mapping_child(doc, "/jobs", |doc, internal_path| {
+            for_each_seq_element(doc, &format!("{internal_path}/steps"), |doc, step_path| {
                 self.sort_mapping_at_path(doc, step_path, &self.key_ordering)
             })
         })?;

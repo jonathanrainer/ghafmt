@@ -1,35 +1,27 @@
-//! Reads a workflow file, parses it, and applies the structure transformer pipeline.
+//! Applies the structure transformer pipeline to a parsed GHA document.
 use fyaml::Document;
 use tracing::{info, warn};
 
 use crate::{
     errors::{Error, Result, Warning},
-    structure_transformers::{
-        CaseEnforcer, ConcurrencySorter, ContainerSorter, DefaultsSorter, EnvSorter,
-        EnvironmentSorter, FilterSorter, JobSorter, NeedsSorter, OnSorter, PermissionsSorter,
-        RunsOnSorter, StepSorter, StrategySorter, StructureTransformer, TopLevelSorter, WithSorter,
-        WorkflowCallSorter, WorkflowDispatchSorter, WorkflowRunSorter,
-    },
+    structure_transformers::StructureTransformer,
 };
 
-/// Applies the ordered sequence of [`StructureTransformer`]s to a parsed workflow document.
-pub(crate) struct WorkflowProcessor {
+/// Applies the ordered sequence of [`StructureTransformer`]s to a parsed GHA document.
+pub(crate) struct StructurePipeline {
     /// Ordered list of structure transformers to apply in sequence.
     transformers: Vec<Box<dyn StructureTransformer>>,
 }
 
-impl WorkflowProcessor {
-    /// Create a `WorkflowProcessor` with a custom transformer pipeline.
+impl StructurePipeline {
+    /// Create a [`StructurePipeline`] with the given transformer pipeline.
     pub(crate) fn new(transformers: Vec<Box<dyn StructureTransformer>>) -> Self {
-        WorkflowProcessor { transformers }
+        StructurePipeline { transformers }
     }
 
     /// Parse `content` (identified as `name` in diagnostics), apply all transformers,
     /// and return the result.
-    pub(crate) fn process(&self, content: &str, name: &str) -> Result<(Document, Vec<Warning>)> {
-        let parse_result = Document::parse_str(content);
-        let mut document = parse_result.map_err(|e| Error::parse_yaml(name, content, &e))?;
-
+    pub(crate) fn process(&self, mut document: Document) -> Result<(Document, Vec<Warning>)> {
         let mut warnings: Vec<Warning> = vec![];
 
         for transformer in &self.transformers {
@@ -57,32 +49,6 @@ impl WorkflowProcessor {
         }
 
         Ok((document, warnings))
-    }
-}
-
-impl Default for WorkflowProcessor {
-    fn default() -> Self {
-        Self::new(vec![
-            Box::new(TopLevelSorter::default()),
-            Box::new(JobSorter::default()),
-            Box::new(StepSorter::default()),
-            Box::new(OnSorter::default()),
-            Box::new(WorkflowDispatchSorter::default()),
-            Box::new(WithSorter),
-            Box::new(WorkflowCallSorter::default()),
-            Box::new(WorkflowRunSorter::default()),
-            Box::new(PermissionsSorter),
-            Box::new(EnvSorter),
-            Box::new(DefaultsSorter),
-            Box::new(ConcurrencySorter::default()),
-            Box::new(EnvironmentSorter::default()),
-            Box::new(NeedsSorter::default()),
-            Box::new(RunsOnSorter::default()),
-            Box::new(FilterSorter::default()),
-            Box::new(StrategySorter::default()),
-            Box::new(ContainerSorter::default()),
-            Box::new(CaseEnforcer::new(heck::ToSnakeCase::to_snake_case)),
-        ])
     }
 }
 
@@ -133,8 +99,9 @@ mod tests {
 
     #[test]
     fn failed_transformer_produces_warning() {
-        let proc = WorkflowProcessor::new(vec![Box::new(AlwaysFail)]);
-        let (_, warnings) = proc.process("a: b\n", "test").expect("process failed");
+        let proc = StructurePipeline::new(vec![Box::new(AlwaysFail)]);
+        let starter_doc = Document::from_string("a: b\n".to_string()).expect("valid YAML");
+        let (_, warnings) = proc.process(starter_doc).expect("process failed");
         assert_eq!(warnings.len(), 1);
         assert!(
             matches!(&warnings[0], Warning::StructureTransform { transformer, .. } if *transformer == "always-fail")
@@ -144,8 +111,9 @@ mod tests {
     #[test]
     fn failed_transformer_document_is_restored() {
         // AlwaysFail runs but fails; the document should be unchanged after it.
-        let proc = WorkflowProcessor::new(vec![Box::new(AlwaysFail)]);
-        let (doc, _) = proc.process("a: b\n", "test").expect("process failed");
+        let proc = StructurePipeline::new(vec![Box::new(AlwaysFail)]);
+        let starter_doc = Document::from_string("a: b\n".to_string()).expect("valid YAML");
+        let (doc, _) = proc.process(starter_doc).expect("process failed");
         assert_eq!(doc.to_string(), "a: b\n");
     }
 
@@ -153,12 +121,13 @@ mod tests {
     fn subsequent_transformers_run_after_failure() {
         // Pipeline: mark with "before", fail, mark with "after".
         // Both markers should be present in the output.
-        let proc = WorkflowProcessor::new(vec![
+        let proc = StructurePipeline::new(vec![
             Box::new(AppendMarker { key: "before" }),
             Box::new(AlwaysFail),
             Box::new(AppendMarker { key: "after" }),
         ]);
-        let (doc, warnings) = proc.process("a: b\n", "test").expect("process failed");
+        let starter_doc = Document::from_string("a: b\n".to_string()).expect("valid YAML");
+        let (doc, warnings) = proc.process(starter_doc).expect("process failed");
         let output = doc.to_string();
         assert_eq!(warnings.len(), 1);
         assert!(output.contains("before"), "expected 'before' in: {output}");

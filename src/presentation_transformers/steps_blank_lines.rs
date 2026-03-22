@@ -5,9 +5,24 @@ use crate::presentation_transformers::{
     PresentationTransformer, insert_blank_line_before_comment_block,
 };
 
-#[derive(Default)]
 /// Inserts a blank line before every step (after the first) in each `steps` sequence.
-pub(crate) struct StepsBlankLines {}
+pub(crate) struct StepsBlankLines {
+    /// The indent depth (in spaces) of the `steps` key in the emitted YAML.
+    key_indent: usize,
+}
+
+impl Default for StepsBlankLines {
+    fn default() -> Self {
+        Self::new(4)
+    }
+}
+
+impl StepsBlankLines {
+    /// Creates a `StepsBlankLines` transformer for `steps` keys at the given indent depth.
+    pub fn new(key_indent: usize) -> Self {
+        Self { key_indent }
+    }
+}
 
 #[derive(Default, Clone, Copy)]
 /// Tracks where in the event stream the current `steps` sequence begins.
@@ -40,7 +55,9 @@ impl PresentationTransformer for StepsBlankLines {
             match ((write_type, content.clone()), state) {
                 ((WriteType::Indent, c), _) => indent_level += c.len(),
                 ((WriteType::Linebreak, _), _) => indent_level = 0,
-                ((WriteType::PlainScalarKey, c), _) if c == "steps" && indent_level == 4 => {
+                ((WriteType::PlainScalarKey, c), _)
+                    if c == "steps" && indent_level == self.key_indent =>
+                {
                     state = State::Steps;
                 }
                 // Make sure we move to this state when we detect the ":" indicator
@@ -54,7 +71,7 @@ impl PresentationTransformer for StepsBlankLines {
                 // Detect every list element that is at indent level 6 (each step) and
                 // only apply the blank line spacing if it's not the first one
                 ((WriteType::Indicator, c), State::Step { start, is_first })
-                    if c == "-" && indent_level == 6 =>
+                    if c == "-" && indent_level == self.key_indent + 2 =>
                 {
                     if !is_first {
                         let len = result.len();
@@ -89,7 +106,7 @@ mod tests {
     use similar_asserts::assert_eq;
 
     use super::*;
-    use crate::workflow_emitter::WorkflowEmitter;
+    use crate::presentation_pipeline::PresentationPipeline;
 
     #[rstest]
     #[case::no_steps(
@@ -283,7 +300,7 @@ mod tests {
     )]
     fn test_steps_emitter(#[case] source_doc: Document, #[case] expected: String) {
         let transformer = StepsBlankLines::default();
-        let events = WorkflowEmitter::create_event_stream(&source_doc)
+        let events = PresentationPipeline::create_event_stream(&source_doc)
             .expect("could not create event stream");
         let result: String = transformer
             .process(events)

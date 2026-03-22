@@ -1,8 +1,8 @@
 use clap::{Parser, ValueEnum};
 use patharg::InputArg;
-use strum_macros::Display;
+use strum::Display;
 
-/// Format GitHub Actions workflow files.
+/// Format GitHub Actions workflow and action metadata files.
 #[derive(Parser, Debug)]
 #[command(
     author,
@@ -32,7 +32,7 @@ Examples:
   ghafmt --mode=list .github/workflows/"
 )]
 pub struct Args {
-    /// Workflow files or directories to format. Use `-` to read from stdin.
+    /// GHA files or directories to format. Use `-` to read from stdin.
     pub files: Vec<InputArg>,
     /// Mode to Operate in, i.e. what function should the formatter perform
     #[arg(default_value_t, long, short = 'm')]

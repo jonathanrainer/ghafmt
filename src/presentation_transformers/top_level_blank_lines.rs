@@ -1,14 +1,30 @@
 //! Inserts blank lines between top-level workflow sections in the emitted event stream.
+
 use fyaml::{EmitEvent, WriteType};
 
 use crate::{
-    constants::TOP_LEVEL_KEY_ORDERING,
+    constants::TOP_LEVEL_WORKFLOW_KEY_ORDERING,
     presentation_transformers::{PresentationTransformer, insert_blank_line_before_comment_block},
 };
 
-#[derive(Default)]
 /// Inserts a blank line before every known top-level key (`on`, `jobs`, etc.) except the first.
-pub(crate) struct TopLevelBlankLines {}
+pub(crate) struct TopLevelBlankLines {
+    /// The set of top-level keys that trigger blank-line insertion.
+    key_ordering: Vec<String>,
+}
+
+impl TopLevelBlankLines {
+    /// Creates a `TopLevelBlankLines` transformer for the given set of top-level keys.
+    pub(crate) fn new(key_ordering: Vec<String>) -> Self {
+        Self { key_ordering }
+    }
+}
+
+impl Default for TopLevelBlankLines {
+    fn default() -> Self {
+        Self::new(TOP_LEVEL_WORKFLOW_KEY_ORDERING.map(String::from).to_vec())
+    }
+}
 
 impl PresentationTransformer for TopLevelBlankLines {
     fn process(&self, event_stream: Vec<EmitEvent>) -> Vec<EmitEvent> {
@@ -24,7 +40,7 @@ impl PresentationTransformer for TopLevelBlankLines {
                 (WriteType::Indent, c) => indent_level += c.len(),
                 (WriteType::Linebreak, _) => indent_level = 0,
                 (WriteType::PlainScalarKey, c)
-                    if TOP_LEVEL_KEY_ORDERING.contains(&c.as_str()) && indent_level == 0 =>
+                    if self.key_ordering.contains(&c) && indent_level == 0 =>
                 {
                     if !result.is_empty() {
                         let len = result.len();
@@ -55,7 +71,7 @@ mod tests {
     use similar_asserts::assert_eq;
 
     use super::*;
-    use crate::workflow_emitter::WorkflowEmitter;
+    use crate::presentation_pipeline::PresentationPipeline;
 
     #[rstest]
     #[case::no_top_level_keys(
@@ -152,7 +168,7 @@ mod tests {
     )]
     fn test_top_level_blank_lines(#[case] source_doc: Document, #[case] expected: String) {
         let transformer = TopLevelBlankLines::default();
-        let events = WorkflowEmitter::create_event_stream(&source_doc)
+        let events = PresentationPipeline::create_event_stream(&source_doc)
             .expect("could not create event stream");
         let result: String = transformer
             .process(events)
