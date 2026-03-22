@@ -1,3 +1,9 @@
+# check=skip=FromPlatformFlagConstDisallowed
+# --platform=linux/amd64 is intentional on both FROM lines below. All CI runners are amd64
+# and we use cross-compilation (rather than native ARM64 runners) to produce the ARM64 binary.
+# The rust-musl-cross images support multi-arch hosts, but we pin to amd64 to ensure the
+# cross-compilation toolchain is always used consistently. Removing --platform would cause
+# builds to break on any non-amd64 host that tried to pull these images natively.
 ARG TARGETARCH
 
 # Digest-pinned per-platform base images. To update, run:

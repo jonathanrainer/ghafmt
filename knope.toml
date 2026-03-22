@@ -22,6 +22,10 @@ type = "PrepareRelease"
 
 [[workflows.steps]]
 type = "Command"
+command = "sed -i \"s|jonathanrainer/ghafmt@[a-f0-9]\\{40\\}.*|jonathanrainer/ghafmt@$(git rev-parse HEAD) # v$version|\" README.md"
+
+[[workflows.steps]]
+type = "Command"
 command = "git commit -am \"chore: prepare release $version\""
 
 [[workflows.steps]]

@@ -180,7 +180,7 @@ Use the bundled action — it downloads the correct pre-built binary for the run
 discovers both workflow files and any `action.yml`/`action.yaml` files in the repository:
 
 ```yaml
-- uses: jonathanrainer/ghafmt@v0.2.0
+- uses: jonathanrainer/ghafmt@1cc43c68845e56ea46b7a9c6017e024283081648
   with:
     mode: check          # check (default) | write | list
     path: .github/workflows/
