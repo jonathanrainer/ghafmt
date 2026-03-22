@@ -28,6 +28,7 @@ jobs:
     with:
       version: ${{ needs.setup.outputs.version }}
       retention_days: 7
+    secrets: inherit
 
   build_docker:
     name: Build Docker Image
