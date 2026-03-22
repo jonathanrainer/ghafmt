@@ -3,7 +3,7 @@ use fyaml::Document;
 
 use crate::{
     constants::STEP_LEVEL_KEY_ORDERING,
-    structure_transformers::{for_each_mapping_child, for_each_seq_element, StructureTransformer},
+    structure_transformers::{StructureTransformer, for_each_mapping_child, for_each_seq_element},
 };
 
 /// Sorts the keys of each step into the canonical GHA ordering.

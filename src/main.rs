@@ -3,7 +3,7 @@
 use std::process::ExitCode;
 
 use clap::Parser;
-use ghafmt::{cli::Args, Ghafmt};
+use ghafmt::{Ghafmt, cli::Args};
 
 /// Parse CLI arguments, format the given GHA file(s), and handle output
 /// according to the selected mode.

@@ -4,7 +4,7 @@ use fyaml::Document;
 
 use crate::{
     constants::INPUT_ORDER,
-    structure_transformers::{for_each_mapping_child, StructureTransformer},
+    structure_transformers::{StructureTransformer, for_each_mapping_child},
 };
 
 /// Sorts `workflow_call` entries idiomatically and then alphabetically.

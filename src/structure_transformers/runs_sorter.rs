@@ -3,7 +3,7 @@ use fyaml::Document;
 
 use crate::{
     constants::STEP_LEVEL_KEY_ORDERING,
-    structure_transformers::{for_each_seq_element, StructureTransformer},
+    structure_transformers::{StructureTransformer, for_each_seq_element},
 };
 
 /// Sorts keys under `runs` into an idiomatic order for the given action type.

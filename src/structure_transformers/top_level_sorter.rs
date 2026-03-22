@@ -161,9 +161,17 @@ mod tests {
         "}.to_string()
     )]
     fn test_top_level_sorter_with_new(#[case] source_doc: Document, #[case] expected: String) {
-        let ordering = ["name", "description", "author", "inputs", "outputs", "runs", "branding"]
-            .map(String::from)
-            .to_vec();
+        let ordering = [
+            "name",
+            "description",
+            "author",
+            "inputs",
+            "outputs",
+            "runs",
+            "branding",
+        ]
+        .map(String::from)
+        .to_vec();
         let result = TopLevelSorter::new(ordering)
             .process(source_doc)
             .expect("processing failed")

@@ -2,7 +2,7 @@
 use fyaml::{EmitEvent, WriteType};
 
 use crate::presentation_transformers::{
-    insert_blank_line_before_comment_block, PresentationTransformer,
+    PresentationTransformer, insert_blank_line_before_comment_block,
 };
 
 /// Inserts a blank line before every step (after the first) in each `steps` sequence.

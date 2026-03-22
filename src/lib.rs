@@ -15,16 +15,18 @@ use tracing::{info, warn};
 
 use crate::{
     cli::{ColourMode, Mode},
-    commands::{build_handler, render_error, Command},
+    commands::{Command, build_handler, render_error},
     constants::{
         COMPOSITE_KEY_ORDER, DOCKER_KEY_ORDER, JAVASCRIPT_KEY_ORDER,
         TOP_LEVEL_METADATA_KEY_ORDERING,
     },
     fs::{expand_paths, read_from_stdin},
+    presentation_pipeline::PresentationPipeline,
     presentation_transformers::{
         JobsBlankLines, PresentationTransformer, StepsBlankLines, TopLevelBlankLines,
         TopLevelCommentSpacer, VariableSpacer,
     },
+    structure_pipeline::StructurePipeline,
     structure_transformers::{
         BrandingSorter, CaseEnforcer, ConcurrencySorter, ContainerSorter, DefaultsSorter,
         EnvSorter, EnvironmentSorter, FilterSorter, InputsSorter, JobSorter, NeedsSorter, OnSorter,
@@ -32,8 +34,6 @@ use crate::{
         StructureTransformer, TopLevelSorter, WithSorter, WorkflowCallSorter,
         WorkflowDispatchSorter, WorkflowRunSorter,
     },
-    presentation_pipeline::PresentationPipeline,
-    structure_pipeline::StructurePipeline,
 };
 
 pub mod cli;
@@ -41,10 +41,10 @@ pub mod cli;
 pub(crate) mod commands;
 /// File-system helpers: path expansion, atomic writes, and stdin reading.
 mod fs;
-mod presentation_transformers;
-mod structure_transformers;
 mod presentation_pipeline;
+mod presentation_transformers;
 mod structure_pipeline;
+mod structure_transformers;
 
 /// Structure and presentation transformer pipelines for a single document.
 pub(crate) type TransformerPipeline = (
