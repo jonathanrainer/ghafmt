@@ -106,7 +106,7 @@ mod tests {
     use similar_asserts::assert_eq;
 
     use super::*;
-    use crate::workflow_emitter::WorkflowEmitter;
+    use crate::presentation_pipeline::PresentationPipeline;
 
     #[rstest]
     #[case::no_steps(
@@ -300,7 +300,7 @@ mod tests {
     )]
     fn test_steps_emitter(#[case] source_doc: Document, #[case] expected: String) {
         let transformer = StepsBlankLines::default();
-        let events = WorkflowEmitter::create_event_stream(&source_doc)
+        let events = PresentationPipeline::create_event_stream(&source_doc)
             .expect("could not create event stream");
         let result: String = transformer
             .process(events)

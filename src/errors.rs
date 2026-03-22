@@ -10,8 +10,8 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// All fatal errors that can occur during formatting.
 #[derive(Debug, Error, Diagnostic)]
 pub enum Error {
-    /// The workflow file could not be read from disk.
-    #[error("Could not read workflow file '{path}'")]
+    /// The GHA file could not be read from disk.
+    #[error("Could not read GHA file '{path}'")]
     #[diagnostic(
         code(ghafmt::io::read_failed),
         help("check the file exists and is readable")
@@ -24,16 +24,16 @@ pub enum Error {
         source: std::io::Error,
     },
 
-    /// The workflow file could not be read from stdin.
-    #[error("Could not read workflow file from stdin")]
+    /// The GHA file could not be read from stdin.
+    #[error("Could not read GHA file from stdin")]
     ReadStdIn {
         /// The underlying I/O error.
         #[source]
         source: std::io::Error,
     },
 
-    /// The workflow file could not be parsed as YAML.
-    #[error("Could not parse workflow file as YAML: {message}")]
+    /// The GHA file could not be parsed as YAML.
+    #[error("Could not parse GHA file as YAML: {message}")]
     #[diagnostic(
         code(ghafmt::parse::invalid_yaml),
         help("ensure the file is valid YAML")
@@ -115,7 +115,7 @@ pub enum Warning {
 
 /// Number of lines of context to include above and below a parse error in diagnostics.
 /// Limits how much of the file is exposed on stderr, reducing the risk of accidentally
-/// printing secrets that appear elsewhere in the workflow file.
+/// printing secrets that appear elsewhere in the file.
 const PARSE_ERROR_CONTEXT_LINES: usize = 5;
 
 impl Error {

@@ -1,7 +1,7 @@
 //! Library entry point for `ghafmt`.
 //!
 //! Exposes [`Ghafmt`], which orchestrates the structure-transformation and
-//! presentation-transformation pipeline for GitHub Actions workflow files.
+//! presentation-transformation pipeline for GitHub Actions files.
 mod constants;
 pub mod errors;
 
@@ -32,8 +32,8 @@ use crate::{
         StructureTransformer, TopLevelSorter, WithSorter, WorkflowCallSorter,
         WorkflowDispatchSorter, WorkflowRunSorter,
     },
-    workflow_emitter::WorkflowEmitter,
-    workflow_processor::Processor,
+    presentation_pipeline::PresentationPipeline,
+    structure_pipeline::StructurePipeline,
 };
 
 pub mod cli;
@@ -43,8 +43,8 @@ pub(crate) mod commands;
 mod fs;
 mod presentation_transformers;
 mod structure_transformers;
-mod workflow_emitter;
-mod workflow_processor;
+mod presentation_pipeline;
+mod structure_pipeline;
 
 /// Structure and presentation transformer pipelines for a single document.
 pub(crate) type TransformerPipeline = (
@@ -79,7 +79,7 @@ enum DocumentType {
     JavascriptAction,
 }
 
-/// Top-level formatter that processes and emits a GitHub Actions workflow file.
+/// Top-level formatter that processes and emits GitHub Actions files.
 #[derive(Default)]
 pub struct Ghafmt {}
 
@@ -146,7 +146,7 @@ impl Ghafmt {
             match Document::parse_str(&content) {
                 Ok(document) => {
                     let result =
-                        self.format_gha_workflow(document, file)
+                        self.format_gha_document(document, file)
                             .map(|(output, warnings)| FormatterResult {
                                 input: file.clone(),
                                 output,
@@ -166,7 +166,7 @@ impl Ghafmt {
         }
     }
 
-    /// Format a GitHub Actions workflow from a string and return the formatted YAML
+    /// Format a GitHub Actions document and return the formatted YAML
     /// along with any non-fatal warnings produced during processing.
     ///
     /// `name` is used only in diagnostic output (e.g. `"<stdin>"`).
@@ -175,7 +175,7 @@ impl Ghafmt {
     ///
     /// Returns an error if `content` cannot be parsed as valid YAML.
     /// Transformer failures are returned as warnings rather than errors.
-    pub fn format_gha_workflow(
+    pub fn format_gha_document(
         &mut self,
         doc: Document,
         path: &InputArg,
@@ -183,10 +183,10 @@ impl Ghafmt {
         info!("Beginning Document Processing...");
         let (structure_transformers, presentation_transformers) =
             Ghafmt::get_transformers(&doc, path);
-        let processor = Processor::new(structure_transformers);
-        let (yaml, warnings) = processor.process(doc)?;
-        info!("Emitting workflow...");
-        let mut emitter = WorkflowEmitter::new(presentation_transformers);
+        let pipeline = StructurePipeline::new(structure_transformers);
+        let (yaml, warnings) = pipeline.process(doc)?;
+        info!("Emitting document...");
+        let mut emitter = PresentationPipeline::new(presentation_transformers);
         let yaml_string = emitter.emit(&yaml)?;
         Ok((yaml_string, warnings))
     }
@@ -198,7 +198,7 @@ impl Ghafmt {
             None => match document.at_path("/on") {
                 None => {
                     warn!(
-                        "Could not find 'runs/using' or '/on' in the workflow file, defaulting to Unknown"
+                        "Could not find 'runs/using' or '/on' in the document, defaulting to Unknown"
                     );
                     DocumentType::Unknown
                 }

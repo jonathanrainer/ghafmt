@@ -5,7 +5,7 @@ use std::process::ExitCode;
 use clap::Parser;
 use ghafmt::{cli::Args, Ghafmt};
 
-/// Parse CLI arguments, format the given workflow file(s), and handle output
+/// Parse CLI arguments, format the given GHA file(s), and handle output
 /// according to the selected mode.
 fn main() -> ExitCode {
     let args = Args::parse();

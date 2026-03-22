@@ -8,13 +8,13 @@ use crate::{
 };
 
 /// Converts a processed [`Document`] into a formatted YAML string via the presentation pipeline.
-pub(crate) struct WorkflowEmitter {
+pub(crate) struct PresentationPipeline {
     /// Ordered list of presentation transformers to apply in sequence.
     transformers: Vec<Box<dyn PresentationTransformer>>,
 }
 
-impl WorkflowEmitter {
-    /// Create a `WorkflowEmitter` with the default presentation transformer pipeline.
+impl PresentationPipeline {
+    /// Create a [`PresentationPipeline`] with the given transformer pipeline.
     pub(crate) fn new(transformers: Vec<Box<dyn PresentationTransformer>>) -> Self {
         Self { transformers }
     }

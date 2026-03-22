@@ -14,7 +14,7 @@ fn test_idempotency(#[files("tests/fixtures/clean/**/*.yaml")] path: PathBuf) {
     let doc = Document::from_string(original.clone()).expect("Should be valid YAML");
 
     let (formatted, _) = formatter
-        .format_gha_workflow(doc, &InputArg::Path(path.clone()))
+        .format_gha_document(doc, &InputArg::Path(path.clone()))
         .expect("Could not format workflow");
 
     assert_eq!(original, formatted, "Formatting is not idempotent");

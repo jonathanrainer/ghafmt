@@ -71,7 +71,7 @@ mod tests {
     use similar_asserts::assert_eq;
 
     use super::*;
-    use crate::workflow_emitter::WorkflowEmitter;
+    use crate::presentation_pipeline::PresentationPipeline;
 
     #[rstest]
     #[case::no_top_level_keys(
@@ -168,7 +168,7 @@ mod tests {
     )]
     fn test_top_level_blank_lines(#[case] source_doc: Document, #[case] expected: String) {
         let transformer = TopLevelBlankLines::default();
-        let events = WorkflowEmitter::create_event_stream(&source_doc)
+        let events = PresentationPipeline::create_event_stream(&source_doc)
             .expect("could not create event stream");
         let result: String = transformer
             .process(events)

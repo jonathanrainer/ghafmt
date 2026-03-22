@@ -61,7 +61,7 @@ mod tests {
     use similar_asserts::assert_eq;
 
     use super::*;
-    use crate::workflow_emitter::WorkflowEmitter;
+    use crate::presentation_pipeline::PresentationPipeline;
 
     #[rstest]
     #[case::no_comments(
@@ -115,7 +115,7 @@ mod tests {
     )]
     fn test_top_level_comment_spacer(#[case] source_doc: Document, #[case] expected: String) {
         let transformer = TopLevelCommentSpacer::default();
-        let events = WorkflowEmitter::create_event_stream(&source_doc)
+        let events = PresentationPipeline::create_event_stream(&source_doc)
             .expect("could not create event stream");
         let result: String = transformer
             .process(events)

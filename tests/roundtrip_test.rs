@@ -25,7 +25,7 @@ fn test_formatter(#[files("tests/fixtures/dirty/**/*.yaml")] path: PathBuf) {
     let doc = Document::from_string(content).expect("Should be valid YAML");
 
     let (formatted, _) = formatter
-        .format_gha_workflow(doc, &InputArg::Path(path.clone()))
+        .format_gha_document(doc, &InputArg::Path(path.clone()))
         .expect("Could not format workflow");
 
     assert_eq!(clean_file_contents, formatted);
