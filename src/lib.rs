@@ -193,10 +193,7 @@ impl Ghafmt {
 
     /// Detects the document type and returns the structure and presentation transformer pipelines.
     #[allow(clippy::too_many_lines)]
-    pub(crate) fn get_transformers(
-        document: &Document,
-        path: &InputArg,
-    ) -> TransformerPipeline {
+    pub(crate) fn get_transformers(document: &Document, path: &InputArg) -> TransformerPipeline {
         let document_type = match document.at_path("/runs/using") {
             None => match document.at_path("/on") {
                 None => {
@@ -226,7 +223,7 @@ impl Ghafmt {
                 }
             },
         };
-        eprintln!("Detected {path} as {document_type}");
+        info!("Detected {path} as {document_type}");
         match document_type {
             DocumentType::Unknown => (
                 vec![],
