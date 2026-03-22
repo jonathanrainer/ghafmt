@@ -36,6 +36,7 @@ jobs:
     uses: ./.github/workflows/_build_artifacts.yml
     with:
       version: ${{ needs.setup.outputs.version }}
+    secrets: inherit
 
   build_docker:
     name: Build Docker Image
