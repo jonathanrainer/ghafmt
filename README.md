@@ -3,7 +3,7 @@
 A formatter for GitHub Actions workflow and action metadata files.
 
 [![CI](https://github.com/jonathanrainer/ghafmt/actions/workflows/code_checks.yml/badge.svg)](https://github.com/jonathanrainer/ghafmt/actions/workflows/code_checks.yml)
-[![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](LICENSE-MIT)
+[![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](LICENSE)
 
 `ghafmt` enforces a consistent style across your GitHub Actions YAML files — both workflow files and action metadata
 files (`action.yml` / `action.yaml`). It reorders keys, sorts blocks alphabetically, inserts blank lines between
@@ -235,4 +235,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
-Licensed under either of [MIT](LICENSE-MIT) or [Apache-2.0](LICENSE-APACHE) at your option.
+Licensed under either of [MIT](LICENSE) or [Apache-2.0](LICENSE-APACHE) at your option.
