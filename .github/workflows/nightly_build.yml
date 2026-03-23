@@ -9,6 +9,8 @@ jobs:
   setup:
     name: Compute Build Metadata
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     outputs:
       display_version: ${{ steps.version.outputs.display_version }}
       version: ${{ steps.version.outputs.version }}
@@ -66,7 +68,7 @@ jobs:
 
       - name: Create nightly release
         run: |
-          gh release create nightly artifacts/* \
+          gh release create nightly artifacts/ghafmt-* \
             --prerelease \
             --title "Nightly Build (${{ needs.setup.outputs.display_version }})" \
             --notes "Automated nightly build from \`${{ github.sha }}\`.
