@@ -26,6 +26,10 @@ command = "sed -i \"s|jonathanrainer/ghafmt@[a-f0-9]\\{40\\}.*|jonathanrainer/gh
 
 [[workflows.steps]]
 type = "Command"
+command = "cargo update -p ghafmt"
+
+[[workflows.steps]]
+type = "Command"
 command = "git commit -am \"chore: Prepare To Release v$version\""
 
 [[workflows.steps]]
