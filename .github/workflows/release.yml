@@ -6,11 +6,12 @@ on:
       - main
     types:
       - closed
+  workflow_dispatch:
 
 jobs:
   setup:
     name: Compute Version
-    if: github.head_ref == 'release' && github.event.pull_request.merged == true
+    if: (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') || (github.head_ref == 'release' && github.event.pull_request.merged == true)
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -29,7 +30,7 @@ jobs:
   build_artifacts:
     name: Build Artifacts
     needs: setup
-    if: github.head_ref == 'release' && github.event.pull_request.merged == true
+    if: (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') || (github.head_ref == 'release' && github.event.pull_request.merged == true)
     permissions:
       contents: read
     uses: ./.github/workflows/_build_artifacts.yml
@@ -40,7 +41,7 @@ jobs:
   build_docker:
     name: Build Docker Image
     needs: setup
-    if: github.head_ref == 'release' && github.event.pull_request.merged == true
+    if: (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') || (github.head_ref == 'release' && github.event.pull_request.merged == true)
     permissions:
       contents: read
       packages: write
