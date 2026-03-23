@@ -22,6 +22,7 @@ type = "PrepareRelease"
 
 [[workflows.steps]]
 type = "Command"
+shell = true
 command = "sed -i \"s|jonathanrainer/ghafmt@[a-f0-9]\\{40\\}.*|jonathanrainer/ghafmt@$(git rev-parse HEAD) # v$version|\" README.md"
 
 [[workflows.steps]]
