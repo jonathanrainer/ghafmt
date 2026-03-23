@@ -26,7 +26,7 @@ command = "sed -i \"s|jonathanrainer/ghafmt@[a-f0-9]\\{40\\}.*|jonathanrainer/gh
 
 [[workflows.steps]]
 type = "Command"
-command = "git commit -am \"chore: prepare release $version\""
+command = "git commit -am \"chore: Prepare To Release v$version\""
 
 [[workflows.steps]]
 type = "Command"
@@ -37,7 +37,7 @@ type = "CreatePullRequest"
 base = "main"
 
 [workflows.steps.title]
-template = "chore: prepare release $version"
+template = "chore: Prepare To Release v$version"
 
 [workflows.steps.body]
 template = "This PR was created by Knope. Merging it will create a new release.\n\n$changelog"

@@ -6,7 +6,7 @@ default: patch
 
 Address findings from a Staff Engineer-level review of the codebase.
 
-## Bug fixes
+#### Bug fixes
 - Fix typo in `FilterSorter`: `on/pull_request_targe/branches-ignore` →
   `on/pull_request_target/branches-ignore`, which was silently skipping that
   sort path
@@ -19,7 +19,7 @@ Address findings from a Staff Engineer-level review of the codebase.
   `--mode=write` restriction; produces a structured error via the same
   `StdinCannotBeUsedWithList` variant
 
-## Refactoring
+#### Refactoring
 - Replace ad-hoc `eprintln!` calls for early validation errors in `Ghafmt::run`
   with structured `Error` variants rendered through `render_error`, so colour
   mode is respected and diagnostics are consistent
@@ -46,7 +46,7 @@ Address findings from a Staff Engineer-level review of the codebase.
 - Fix `--colour` flag spelling in the CLI integration test (was `--color`,
   causing the test to pass vacuously against a clap parse error)
 
-## Tests
+#### Tests
 - Add unit tests for `source_window` and `line_col_to_byte_offset` in `errors.rs`
 - Add integration tests for `WorkflowProcessor` error recovery: failed
   transformer emits a warning, document is restored, and subsequent transformers

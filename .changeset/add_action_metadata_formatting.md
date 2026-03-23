@@ -7,7 +7,7 @@ default: minor
 `ghafmt` now detects and formats GitHub Actions action metadata files
 (`action.yml` / `action.yaml`) in addition to workflow files.
 
-## Supported action types
+#### Supported action types
 
 - **Composite actions** (`runs.using: composite`) — top-level key ordering,
   `runs` key ordering, step key ordering, alphabetical `with` sorting inside
@@ -24,11 +24,8 @@ default: minor
 Files that cannot be identified as a workflow or action pass through
 with presentation transforms only (blank lines, variable spacing).
 
-## Top-level key ordering
+#### Top-level key ordering
 
 Action metadata files are sorted into the canonical order recommended
 by the GitHub Actions documentation:
-
-```
-name → description → author → inputs → outputs → runs → branding
-```
+`name → description → author → inputs → outputs → runs → branding`
