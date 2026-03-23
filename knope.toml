@@ -2,7 +2,7 @@
 versioned_files = ["Cargo.toml"]
 changelog = "CHANGELOG.md"
 ignore_conventional_commits = true
-assets = [{path = "artifacts/*"}]
+assets = "artifacts/ghafmt-*"
 
 [[workflows]]
 name = "create-changeset"
