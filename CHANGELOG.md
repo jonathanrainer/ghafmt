@@ -1,3 +1,13 @@
+## 0.1.3 (2026-03-24)
+
+### Fixes
+
+#### Store version in the action
+
+Remove the `version` input and instead hardcode `ACTION_VERSION` as an env var
+in the download step, kept in lockstep with Cargo.toml via a new Knope step
+that updates it automatically during release preparation. (9209263)
+
 ## 0.1.2 (2026-03-24)
 
 ### Fixes
