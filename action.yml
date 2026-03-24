@@ -13,20 +13,13 @@ inputs:
     description: Path to workflow file(s) or directory to format
     required: false
     default: .github/workflows/
-  version:
-    description: Release version to download (e.g. 0.2.0). Defaults to latest release.
-    required: false
-    default: latest
 
 runs:
   using: composite
   steps:
     - name: Download ghafmt
       run: |
-        VERSION="$INPUT_VERSION"
-        if [ "$VERSION" = "latest" ]; then
-          VERSION=$(gh api repos/jonathanrainer/ghafmt/releases/latest --jq '.tag_name' | sed 's/^v//')
-        fi
+        VERSION=$(echo "${{ github.action_ref }}" | sed 's/^v//')
 
         case "${{ runner.os }}-${{ runner.arch }}" in
           Linux-X64)   TARGET="x86_64-unknown-linux-musl" ;;
@@ -52,14 +45,13 @@ runs:
         echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
       env:
         GH_TOKEN: ${{ github.token }}
-        INPUT_VERSION: ${{ inputs.version }}
       shell: bash
 
     - name: Run ghafmt
       run: |
         mapfile -t ACTION_FILES < <(find . \( -name "action.yml" -o -name "action.yaml" \) \
           ! -path '*/.git/*' ! -path '*/node_modules/*' 2>/dev/null)
-        ghafmt "--${INPUT_MODE}" "${INPUT_PATH}" "${ACTION_FILES[@]}"
+        ghafmt "--mode=${INPUT_MODE}" "${INPUT_PATH}" "${ACTION_FILES[@]}"
       env:
         INPUT_MODE: ${{ inputs.mode }}
         INPUT_PATH: ${{ inputs.path }}
