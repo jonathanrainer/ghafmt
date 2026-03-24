@@ -1,3 +1,26 @@
+## 0.1.2 (2026-03-24)
+
+### Fixes
+
+#### Fix action mode flag and remove redundant version input
+
+Fix the `--mode` flag construction in the composite action so users can pass
+`mode: check` rather than `mode: mode=check`.
+
+Remove the `version` input and derive the binary version directly from
+`github.action_ref`, keeping the action version and binary version in lockstep. (57b11a1)
+
+### Project Infrastructure
+
+#### Fix release tag creation and remove yq workaround
+
+Use a fine-grained PAT (`RELEASE_PAT`) for the knope release step so that
+tag creation is not blocked by the repository ruleset restricting ref
+creation for the default `GITHUB_TOKEN`.
+
+Remove the `set-cargo-version` yq TOML-output workaround now that the
+`ubuntu-24.04-arm` runner image ships a yq version with full TOML support. (c10672c)
+
 ## 0.1.1 (2026-03-24)
 
 ### Fixes
