@@ -197,7 +197,7 @@ impl StructureTransformer for CaseEnforcer {
                 return;
             }
 
-            if !value.contains("${{") {
+            if !value.contains("${{") && !path.ends_with("/if") {
                 return;
             }
 
@@ -653,6 +653,41 @@ mod tests {
                 needs: my_job
                 env:
                   FOO: ${{ needs.my_job.outputs.my_output }}
+        "}
+    )]
+    #[case::updates_bare_if_step_refs(
+        indoc! {"
+            on:
+              push: {}
+
+            jobs:
+              example:
+                runs-on: ubuntu-latest
+                steps:
+                - id: cache-thing
+                  uses: actions/cache@v4
+                  with:
+                    key: thing
+                    path: /tmp/thing
+                - if: steps.cache-thing.outputs.cache-hit != 'true'
+                  name: Build something
+                  run: echo \"cache miss, building\"
+        "},
+        indoc! {"
+            on:
+              push: {}
+            jobs:
+              example:
+                runs-on: ubuntu-latest
+                steps:
+                - id: cache_thing
+                  uses: actions/cache@v4
+                  with:
+                    key: thing
+                    path: /tmp/thing
+                - if: steps.cache_thing.outputs.cache-hit != 'true'
+                  name: Build something
+                  run: echo \"cache miss, building\"
         "}
     )]
     fn test_process(#[case] input: &str, #[case] expected: &str) {
