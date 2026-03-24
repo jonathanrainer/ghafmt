@@ -19,8 +19,6 @@ runs:
   steps:
     - name: Download ghafmt
       run: |
-        VERSION=$(echo "${{ github.action_ref }}" | sed 's/^v//')
-
         case "${{ runner.os }}-${{ runner.arch }}" in
           Linux-X64)   TARGET="x86_64-unknown-linux-musl" ;;
           Linux-ARM64) TARGET="aarch64-unknown-linux-musl" ;;
@@ -32,7 +30,7 @@ runs:
             ;;
         esac
 
-        URL="https://github.com/jonathanrainer/ghafmt/releases/download/v${VERSION}/ghafmt-${VERSION}-${TARGET}.tar.gz"
+        URL="https://github.com/jonathanrainer/ghafmt/releases/download/v${ACTION_VERSION}/ghafmt-${ACTION_VERSION}-${TARGET}.tar.gz"
         TARBALL="${RUNNER_TEMP}/ghafmt.tar.gz"
         curl -fsSL "$URL" -o "$TARBALL"
         EXPECTED=$(curl -fsSL "${URL}.sha256" | tr -d '[:space:]')
@@ -44,7 +42,7 @@ runs:
         tar -xz -C "$RUNNER_TEMP" -f "$TARBALL"
         echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
       env:
-        GH_TOKEN: ${{ github.token }}
+        ACTION_VERSION: "0.1.1"
       shell: bash
 
     - name: Run ghafmt

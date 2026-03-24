@@ -31,6 +31,11 @@ command = "cargo update -p ghafmt"
 
 [[workflows.steps]]
 type = "Command"
+shell = true
+command = "sed -i \"s/ACTION_VERSION: \\\"[^\\\"]*\\\"/ACTION_VERSION: \\\"$version\\\"/\" action.yml"
+
+[[workflows.steps]]
+type = "Command"
 command = "git commit -am \"chore: Prepare To Release v$version\""
 
 [[workflows.steps]]
