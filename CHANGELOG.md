@@ -1,3 +1,40 @@
+## 0.1.1 (2026-03-24)
+
+### Fixes
+
+#### Fix step ID references in bare `if:` conditions not being updated
+
+When a step ID was renamed (e.g. `cache-thing` → `cache_thing`), references
+to that ID in `if:` conditions written without `${{ }}` delimiters were left
+unchanged, producing a broken workflow.
+
+GitHub Actions allows `if:` fields to omit the expression wrapper, so
+`if: steps.cache-thing.outputs.cache-hit != 'true'` is valid. The reference
+updater now processes `/if` paths regardless of whether they contain `${{`. (453bd89)
+
+### Project Infrastructure
+
+#### Regenerate Cargo.lock during prepare-release
+
+Added a `cargo update -p ghafmt` step to the `prepare-release` workflow so
+that `Cargo.lock` reflects the new version before the release commit is made. (a05b484)
+
+#### Harden workflows ahead of making repository public
+
+Add explicit `permissions: contents: read` to all read-only jobs in
+`code_checks.yml`, `workflow_checks.yml`, and the `setup` job in
+`nightly_build.yml`, so that a default-permissions change cannot silently
+grant write access.
+
+Fix `nightly_build.yml` to upload `artifacts/ghafmt-*` instead of
+`artifacts/*` to the nightly release, excluding the Docker layer-cache
+artifact that would otherwise appear as a spurious release asset. (e104571)
+
+### Dependencies
+
+- chore(deps): update taiki-e/install-action action to v2.69.7 (b52b460)
+- chore(deps): update taiki-e/install-action action to v2.69.8 (cb38611)
+
 ## 0.1.0 (2026-03-23)
 
 ### Features
