@@ -172,7 +172,10 @@ fn for_each_seq_element<F>(mut doc: Document, seq_path: &str, mut f: F) -> fyaml
 where
     F: FnMut(Document, &str) -> fyaml::Result<Document>,
 {
-    let len = doc.at_path(seq_path).map_or(Ok(0), |n| n.seq_len())?;
+    let len = doc
+        .at_path(seq_path)
+        .filter(fyaml::NodeRef::is_sequence)
+        .map_or(Ok(0), |n| n.seq_len())?;
     debug!("Applying function to each element of {}", seq_path);
     for i in 0..len {
         doc = f(doc, &format!("{seq_path}/{i}"))?;

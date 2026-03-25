@@ -247,6 +247,40 @@ mod tests {
                       os: ubuntu-latest
         "}.to_string()
     )]
+    #[case::expression_valued_include_exclude(
+        Document::from_string(indoc! {"
+            jobs:
+                test:
+                    strategy:
+                        matrix:
+                            include: ${{ fromJSON(inputs.platforms) }}
+                            exclude: ${{ fromJSON(inputs.excludes) }}
+        "}.to_string()).expect("test input is valid YAML"),
+        indoc! {"
+            jobs:
+              test:
+                strategy:
+                  matrix:
+                    include: ${{ fromJSON(inputs.platforms) }}
+                    exclude: ${{ fromJSON(inputs.excludes) }}
+        "}.to_string()
+    )]
+    #[case::expression_valued_dimension_key(
+        Document::from_string(indoc! {"
+            jobs:
+                test:
+                    strategy:
+                        matrix:
+                            platforms: ${{ fromJSON(inputs.platforms) }}
+        "}.to_string()).expect("test input is valid YAML"),
+        indoc! {"
+            jobs:
+              test:
+                strategy:
+                  matrix:
+                    platforms: ${{ fromJSON(inputs.platforms) }}
+        "}.to_string()
+    )]
     #[case::already_sorted(
         Document::from_string(indoc! {"
             jobs:
