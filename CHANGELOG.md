@@ -1,3 +1,16 @@
+## 0.1.4 (2026-03-25)
+
+### Fixes
+
+#### Fix strategy-sorter warning on expression-valued matrix fields
+
+`strategy-sorter` now silently skips `include`, `exclude`, and dimension
+keys whose values are GitHub Actions expressions (e.g.
+`${{ fromJSON(inputs.platforms) }}`), rather than emitting a
+`TypeMismatch: expected sequence, got non-sequence` warning.
+
+Fixes #88. (83f66d2)
+
 ## 0.1.3 (2026-03-24)
 
 ### Fixes
