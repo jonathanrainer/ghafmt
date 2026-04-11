@@ -56,7 +56,7 @@ jobs:
 
       - name: Install cargo-zigbuild
         if: runner.os == 'Linux'
-        uses: taiki-e/install-action@d053c7f943c3a577e98f342e9e28edf09931644c # v2.75.6
+        uses: taiki-e/install-action@0abfcd587b70a713fdaa7fb502c885e2112acb15 # v2.75.7
         with:
           tool: cargo-zigbuild
 
