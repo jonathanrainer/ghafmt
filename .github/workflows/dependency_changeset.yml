@@ -1,4 +1,4 @@
-name: Generate Renovate Changeset
+name: Generate Dependency Changeset
 
 on:
   pull_request:
@@ -7,7 +7,7 @@ on:
 jobs:
   generate_changeset:
     name: Generate Changeset
-    if: github.event.pull_request.user.login == 'renovate[bot]'
+    if: github.event.pull_request.user.login == 'renovate[bot]' || github.event.pull_request.user.login == 'dependabot[bot]'
     runs-on: ubuntu-24.04
     permissions:
       contents: write
@@ -19,7 +19,7 @@ jobs:
 
       - name: Create changeset
         run: |
-          FILE=".changeset/renovate_pr_${PR_NUMBER}.md"
+          FILE=".changeset/dependency_pr_${PR_NUMBER}.md"
           if [ ! -f "$FILE" ]; then
             printf -- '---\ndefault: dependencies\n---\n\n%s\n' \
               "$PR_TITLE" > "$FILE"
