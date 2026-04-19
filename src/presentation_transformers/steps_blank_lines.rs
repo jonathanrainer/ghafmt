@@ -55,10 +55,12 @@ impl PresentationTransformer for StepsBlankLines {
             match ((write_type, content.clone()), state) {
                 ((WriteType::Indent, c), _) => indent_level += c.len(),
                 ((WriteType::Linebreak, _), _) => indent_level = 0,
-                ((WriteType::PlainScalarKey, c), _)
-                    if c == "steps" && indent_level == self.key_indent =>
-                {
-                    state = State::Steps;
+                ((WriteType::PlainScalarKey, c), _) if indent_level == self.key_indent => {
+                    if c == "steps" {
+                        state = State::Steps;
+                    } else {
+                        state = State::Init;
+                    }
                 }
                 // Make sure we move to this state when we detect the ":" indicator
                 // so that the "start" of us tracking the step is correct and not off by 1
@@ -296,6 +298,38 @@ mod tests {
 
                   # between
                   - id: b
+        "}.to_string()
+    )]
+    #[case::block_needs_before_steps_no_spurious_blanks(
+        // A block-sequence `needs` list must not be treated as steps; no blank lines
+        // should appear before or between its items.
+        Document::from_string(indoc! {"
+            jobs:
+              build:
+                runs-on: ubuntu-latest
+                steps:
+                  - run: echo build
+              deploy:
+                needs:
+                  - build
+                  - lint
+                runs-on: ubuntu-latest
+                steps:
+                  - run: echo deploy
+        "}.to_string()).expect("test input is valid YAML"),
+        indoc! {"
+            jobs:
+              build:
+                runs-on: ubuntu-latest
+                steps:
+                  - run: echo build
+              deploy:
+                needs:
+                  - build
+                  - lint
+                runs-on: ubuntu-latest
+                steps:
+                  - run: echo deploy
         "}.to_string()
     )]
     fn test_steps_emitter(#[case] source_doc: Document, #[case] expected: String) {
