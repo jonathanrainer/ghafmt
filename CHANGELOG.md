@@ -1,3 +1,23 @@
+## 0.1.5 (2026-04-26)
+
+### Fixes
+
+- update rust crate similar to v3 (#105) (01d3132)
+- update rust crate similar to v3.1.0 (#124) (e27377b)
+- update rust crate clap to v4.6.1 (#131) (bf34b0e)
+
+### Project Infrastructure
+
+- Extend dependency changeset workflow to cover Dependabot PRs in addition to Renovate, and rename the workflow file accordingly. (0c91c3c)
+
+### Dependencies
+
+- Bump rand from 0.9.2 to 0.9.4 (0c91c3c)
+- chore(deps): update taiki-e/install-action action to v2.75.18 (d919609)
+- chore(deps): update apple-actions/import-codesign-certs action to v7 (ee2c850)
+- chore(deps): update taiki-e/install-action action to v2.75.19 (6a89723)
+- chore(deps): update taiki-e/install-action action to v2.75.22 (45901f3)
+
 ## 0.1.4 (2026-03-25)
 
 ### Fixes

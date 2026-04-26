@@ -453,7 +453,7 @@ dependencies = [
 
 [[package]]
 name = "ghafmt"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "assert_cmd",
  "atomic-write-file",
