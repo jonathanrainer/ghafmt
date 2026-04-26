@@ -5,10 +5,12 @@
 - update rust crate similar to v3 (#105) (01d3132)
 - update rust crate similar to v3.1.0 (#124) (e27377b)
 - update rust crate clap to v4.6.1 (#131) (bf34b0e)
+- ensure that adding blank lines between steps doesn't bleed into other areas (#136) (6ca7fad)
 
 ### Project Infrastructure
 
-- Extend dependency changeset workflow to cover Dependabot PRs in addition to Renovate, and rename the workflow file accordingly. (0c91c3c)
+- Extend dependency changeset workflow to cover Dependabot PRs in addition to Renovate, and rename the workflow file
+  accordingly. (0c91c3c)
 
 ### Dependencies
 
