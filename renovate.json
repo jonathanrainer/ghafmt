@@ -46,6 +46,11 @@
       "matchPackageNames": ["rust-lang/rust"],
       "groupName": "Rust toolchain version",
       "groupSlug": "rust-toolchain-version"
+    },
+    {
+      "matchPackageNames": ["taiki-e/install-action"],
+      "matchUpdateTypes": ["patch"],
+      "enabled": false
     }
   ]
 }

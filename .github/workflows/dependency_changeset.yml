@@ -9,26 +9,36 @@ jobs:
     name: Generate Changeset
     if: github.event.pull_request.user.login == 'renovate[bot]' || github.event.pull_request.user.login == 'dependabot[bot]'
     runs-on: ubuntu-24.04
-    permissions:
-      contents: write
     steps:
+      - name: Generate App token
+        id: app_token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ secrets.AUTOMATION_APP_ID }}
+          private-key: ${{ secrets.AUTOMATION_APP_PRIVATE_KEY }}
+
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
+          fetch-depth: 2
           ref: ${{ github.head_ref }}
+          token: ${{ steps.app_token.outputs.token }}
 
-      - name: Create changeset
+      - name: Amend changeset into PR commit
         run: |
           FILE=".changeset/dependency_pr_${PR_NUMBER}.md"
-          if [ ! -f "$FILE" ]; then
-            printf -- '---\ndefault: dependencies\n---\n\n%s\n' \
-              "$PR_TITLE" > "$FILE"
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add .changeset/
-            git commit -m "chore: add changeset for dependency update"
-            git push
+          if [ -f "$FILE" ]; then
+            echo "Changeset already present; nothing to do."
+            exit 0
           fi
+          printf -- '---\ndefault: dependencies\n---\n\n%s\n' \
+            "$PR_TITLE" > "$FILE"
+          git config user.name "${APP_SLUG}[bot]"
+          git config user.email "${APP_SLUG}[bot]@users.noreply.github.com"
+          git add .changeset/
+          git commit --amend --no-edit
+          git push --force-with-lease
         env:
+          APP_SLUG: ${{ steps.app_token.outputs.app-slug }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           PR_TITLE: ${{ github.event.pull_request.title }}
