@@ -40,12 +40,12 @@ impl PresentationTransformer for TopLevelBlankLines {
                 (WriteType::Indent, c) => indent_level += c.len(),
                 (WriteType::Linebreak, _) => indent_level = 0,
                 (WriteType::PlainScalarKey, c)
-                    if self.key_ordering.contains(&c) && indent_level == 0 =>
+                    if self.key_ordering.contains(&c)
+                        && indent_level == 0
+                        && !result.is_empty() =>
                 {
-                    if !result.is_empty() {
-                        let len = result.len();
-                        insert_blank_line_before_comment_block(&mut result, 0, len, Some(0));
-                    }
+                    let len = result.len();
+                    insert_blank_line_before_comment_block(&mut result, 0, len, Some(0));
                 }
                 _ => {}
             }
