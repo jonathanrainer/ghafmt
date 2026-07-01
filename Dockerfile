@@ -9,7 +9,7 @@ ARG TARGETARCH
 # Digest-pinned per-platform base images. To update, run:
 #   docker buildx imagetools inspect ghcr.io/rust-cross/rust-musl-cross:<tag> --format '{{json .Manifest}}' | jq -r .digest
 FROM --platform=linux/amd64 ghcr.io/rust-cross/rust-musl-cross:amd64-musl@sha256:ce75e9174325d4fbb3de85c309e2d7ca29f7500169bc4b5d2c611ff7e86d549a AS base-amd64
-FROM --platform=linux/amd64 ghcr.io/rust-cross/rust-musl-cross:arm64-musl@sha256:9ca69b8df8fbf4ea6f8c771b33cb66f80093d1fc1a057893e1c73445e3fa35e1 AS base-arm64
+FROM --platform=linux/amd64 ghcr.io/rust-cross/rust-musl-cross:arm64-musl@sha256:ecae5dd62d1c938c14f8071d36c16fa699860aace03bfb5284fb1216474d2643 AS base-arm64
 
 FROM base-${TARGETARCH} AS builder
 
