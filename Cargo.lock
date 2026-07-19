@@ -403,8 +403,9 @@ dependencies = [
 
 [[package]]
 name = "fyaml"
-version = "0.5.0"
-source = "git+https://github.com/jonathanrainer/fyaml?rev=c4b0b3d8f304eb99c447e3254ea296b163c80e3e#c4b0b3d8f304eb99c447e3254ea296b163c80e3e"
+version = "0.5.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d0790c267278d69ffb0b18dac194d56882a4a1e803f5116438dbbfa7c4f53897"
 dependencies = [
  "fyaml-sys",
  "indexmap",
@@ -415,8 +416,9 @@ dependencies = [
 
 [[package]]
 name = "fyaml-sys"
-version = "0.1.1-alpha.1+fy0.9.3-16-ged4720d"
-source = "git+https://github.com/jonathanrainer/fyaml-sys?rev=9ccbc1a05dd4aca4e71ce91fbee114f686ff66ab#9ccbc1a05dd4aca4e71ce91fbee114f686ff66ab"
+version = "0.1.1-alpha.2+fy1.0.0-alpha7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4ed2b7d3db6f450cf02894178fc49d44b89bcdf0a5ba3603b8be136f09adcf22"
 dependencies = [
  "bindgen",
  "cc",
@@ -2097,3 +2099,13 @@ name = "zmij"
 version = "1.0.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b8848ee67ecc8aedbaf3e4122217aff892639231befc6a1b58d29fff4c2cabaa"
+
+[[patch.unused]]
+name = "fyaml"
+version = "0.5.0"
+source = "git+https://github.com/jonathanrainer/fyaml?rev=c4b0b3d8f304eb99c447e3254ea296b163c80e3e#c4b0b3d8f304eb99c447e3254ea296b163c80e3e"
+
+[[patch.unused]]
+name = "fyaml-sys"
+version = "0.1.1-alpha.1+fy0.9.3-16-ged4720d"
+source = "git+https://github.com/jonathanrainer/fyaml-sys?rev=9ccbc1a05dd4aca4e71ce91fbee114f686ff66ab#9ccbc1a05dd4aca4e71ce91fbee114f686ff66ab"
