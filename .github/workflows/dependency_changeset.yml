@@ -8,7 +8,7 @@ jobs:
   generate_changeset:
     name: Generate Changeset
     if: github.event.pull_request.user.login == 'renovate[bot]' || github.event.pull_request.user.login == 'dependabot[bot]'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - name: Generate App token
         id: app_token
