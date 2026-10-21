@@ -37,7 +37,7 @@ missing_docs_in_private_items = "warn"
 assert_cmd = "=2.2.2"
 indoc = "=2.0.8"
 predicates = "=3.1.4"
-rstest = "=0.27.0"
+rstest = "=0.28.0"
 similar-asserts = "=2.0.0"
 tempfile = "=3.27.0"
 
