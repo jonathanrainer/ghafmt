@@ -3,7 +3,7 @@ name: Deeply Nested
 on:
   workflow_dispatch:
     inputs:
-      deploy_env:
+      deploy-env:
         description: 'Environment'
         type: choice
         required: true
@@ -11,7 +11,7 @@ on:
           - dev
           - staging
           - production
-      run_tests:
+      run-tests:
         description: 'Run tests first?'
         type: boolean
         required: false
@@ -25,7 +25,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     environment:
-      name: ${{ inputs.deploy_env }}
+      name: ${{ inputs.deploy-env }}
     strategy:
       matrix:
         service:
@@ -47,5 +47,5 @@ jobs:
           docker build -t ${{ matrix.service.name }}:${{ inputs.version || github.sha }} .
           docker push ${{ matrix.service.name }}:${{ inputs.version || github.sha }}
         env:
-          DEPLOY_ENV: ${{ inputs.deploy_env }}
+          DEPLOY_ENV: ${{ inputs.deploy-env }}
           SERVICE_PORT: ${{ matrix.service.port }}

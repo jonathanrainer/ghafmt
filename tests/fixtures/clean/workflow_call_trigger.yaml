@@ -13,14 +13,14 @@ on:
         required: false
         default: latest
     outputs:
-      deploy_url:
+      deploy-url:
         description: The deployed URL
         value: ${{ jobs.deploy.outputs.url }}
     secrets:
-      deploy_token:
+      DEPLOY_TOKEN:
         description: Token for deployment
         required: true
-      slack_webhook:
+      SLACK_WEBHOOK:
         description: Optional Slack webhook
         required: false
 
@@ -36,4 +36,4 @@ jobs:
         id: deploy
         run: echo "url=https://${{ inputs.environment }}.example.com" >> "$GITHUB_OUTPUT"
         env:
-          DEPLOY_TOKEN: ${{ secrets.deploy_token }}
+          DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}

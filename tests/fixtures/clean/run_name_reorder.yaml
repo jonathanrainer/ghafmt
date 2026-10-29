@@ -1,13 +1,13 @@
 name: Run Name Reorder
 
-run-name: Deploy ${{ inputs.deploy_target || 'staging' }} by @${{ github.actor }}
+run-name: Deploy ${{ inputs.deploy-target || 'staging' }} by @${{ github.actor }}
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
     inputs:
-      deploy_target:
+      deploy-target:
         description: Where to deploy
         type: string
         default: staging
@@ -20,4 +20,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Deploy
-        run: echo "deploying to ${{ inputs.deploy_target || 'staging' }}"
+        run: echo "deploying to ${{ inputs.deploy-target || 'staging' }}"
