@@ -1,3 +1,140 @@
+## 0.2.0 (2026-10-29)
+
+### Features
+
+#### Stop renaming workflow interface identifiers
+
+`workflow_call` inputs, secrets and outputs, and `workflow_dispatch` inputs, are
+no longer converted to `snake_case`. They are a workflow's public interface and
+are referenced from files `ghafmt` never sees (callers' `with:`/`secrets:`, `gh
+workflow run -f`, the REST API), so renaming them silently broke callers. Job
+IDs, step IDs and job-level outputs are still converted, with references updated.
+
+Fixes #216 (3b9eb99)
+
+#### Sort required inputs and secrets first
+
+`workflow_call` inputs and secrets, `workflow_dispatch` inputs and action
+`inputs` are now sorted with `required: true` entries first, followed by the
+rest, each group in alphabetical order.
+
+Fixes #217 (504574e)
+
+### Fixes
+
+- update rust crate similar to v3.1.1 (#152) (39e83a9)
+- update rust crate regex to v1.12.4 (#159) (fb1b481)
+- update rust crate thiserror to v2.0.19 (#175) (2bed953)
+- update rust crate clap to v4.6.2 (#174) (cdf816b)
+- update rust crate regex to v1.13.0 (#173) (028092f)
+- repin fyaml/fyaml-sys forks to rebased integration branches (#176) (13fc0c0)
+- update rust crate clap to v4.6.3 (#178) (dc99ceb)
+- update rust crate clap to v4.6.4 (#181) (4782efd)
+- update rust crate clap to v4.6.5 (#185) (3fd0875)
+- update rust crate similar to v3.1.2 (#187) (07be7bf)
+- update rust crate clap to v4.6.6 (#189) (43d5254)
+- update rust crate thiserror to v2.0.20 (#190) (9a87f57)
+- update rust crate atomic-write-file to v0.3.1 (#191) (c8539c0)
+- update rust crate similar to v3.2.0 (#193) (fe81026)
+- update rust crate clap to v4.6.7 (#199) (a20ac5d)
+- update rust crate thiserror to v2.0.21 (#203) (5b71748)
+- update rust crate similar to v3.2.1 (#215) (a7e2417)
+
+#### Fix spurious blank lines in block-sequence `needs` lists
+
+The `StepsBlankLines` presenter was retaining state across jobs. After
+processing a job's `steps` sequence, the internal state remained as
+`Step { is_first: false }`. Any block-sequence `needs` items in the
+following job emitted `-` indicators at the same indent depth (6 spaces),
+satisfying the step-detection condition and triggering unwanted blank line
+insertion before the first item and between subsequent items.
+
+The fix resets state to `Init` whenever any key other than `steps` is seen
+at the job-key indent depth, preventing stale step-tracking state from
+bleeding across job boundaries. (6ca7fad)
+
+### Project Infrastructure
+
+#### Improve Renovate automation and migrate release workflow off PAT
+
+- Disable patch-level updates for `taiki-e/install-action` to reduce PR noise.
+- `dependency_changeset` workflow now mints a GitHub App token and amends the
+  changeset directly into Renovate's commit (force-push with lease), so PRs
+  have a single commit. This avoids stale-approval dismissal under the
+  `require_last_push_approval` ruleset and triggers required status checks
+  on the final SHA (App tokens trigger downstream workflows; `GITHUB_TOKEN`
+  pushes do not).
+- `release` workflow swaps `RELEASE_PAT` for the same GitHub App token when
+  invoking `knope release`, removing the long-lived personal access token.
+
+Requires repo secrets `AUTOMATION_APP_ID` and `AUTOMATION_APP_PRIVATE_KEY`,
+and the App to be added as a bypass actor on the "Release tags" ruleset. (483c9de)
+
+### Dependencies
+
+- chore(deps): update taiki-e/install-action action to v2.75.23 (4beaab2)
+- chore(deps): update ghcr.io/rust-cross/rust-musl-cross:amd64-musl docker digest to 6c3c52d (2ba9c48)
+- chore(deps): update ghcr.io/rust-cross/rust-musl-cross:arm64-musl docker digest to 9ca69b8 (89de340)
+- chore(deps): update taiki-e/install-action action to v2.75.28 (3630be1)
+- chore(deps): update taiki-e/install-action action to v2.75.29 (3a333de)
+- chore(deps): update rust crate assert_cmd to v2.2.2 (884b157)
+- chore(deps): update docker/build-push-action action to v7.2.0 (a1f5aca)
+- chore(deps): update docker/login-action action to v4.2.0 (00302b0)
+- chore(deps): update docker/metadata-action action to v6.1.0 (3d95555)
+- chore(deps): update docker/setup-buildx-action action to v4.1.0 (ca00449)
+- chore(deps): update rust to v1.95.0 (ece3403)
+- fix(deps): update rust crate similar to v3.1.1 (39e83a9)
+- chore(deps): update taiki-e/install-action action to v2.79.6 (1311548)
+- chore(deps): update rust to v1.96.0 (c1d00e0)
+- chore(deps): update taiki-e/install-action action to v2.80.0 (41f5345)
+- chore(deps): update taiki-e/install-action action to v2.81.1 (e5adac7)
+- chore(deps): update actions/checkout digest to df4cb1c (820315f)
+- chore(deps): update actions/checkout action to v7 (2dd8e93)
+- chore(deps): update ghcr.io/rust-cross/rust-musl-cross:amd64-musl docker digest to ce75e91 (1c8e65f)
+- chore(deps): update docker/login-action action to v4.3.0 (c4fc3f0)
+- chore(deps): update docker/metadata-action action to v6.2.0 (7152b07)
+- chore(deps): update docker/setup-buildx-action action to v4.2.0 (ce78abd)
+- chore(deps): update docker/login-action action to v4.4.0 (d907edd)
+- fix(deps): update rust crate clap to v4.6.2 (cdf816b)
+- fix(deps): update rust crate thiserror to v2.0.19 (2bed953)
+- chore(deps): update actions/checkout digest to 3d3c42e (67214ca)
+- fix(deps): update rust crate clap to v4.6.3 (dc99ceb)
+- chore(deps): update taiki-e/install-action action to v2.84.0 (f9c0e4c)
+- chore(deps): update docker/login-action action to v4.5.0 (b731e45)
+- fix(deps): update rust crate clap to v4.6.4 (4782efd)
+- chore(deps): update taiki-e/install-action action to v2.85.1 (7c3fa80)
+- chore(deps): update docker/login-action action to v4.5.1 (4c9d253)
+- chore(deps): update docker/login-action action to v4.5.2 (b1d065d)
+- fix(deps): update rust crate clap to v4.6.5 (3fd0875)
+- chore(deps): update docker/login-action action to v4.6.0 (33b3562)
+- fix(deps): update rust crate similar to v3.1.2 (07be7bf)
+- chore(deps): update swatinem/rust-cache digest to 6323deb (65ee97b)
+- fix(deps): update rust crate thiserror to v2.0.20 (9a87f57)
+- chore(deps): update taiki-e/install-action action to v2.86.0 (8a60211)
+- fix(deps): update rust crate similar to v3.2.0 (fe81026)
+- chore(deps): update docker/setup-buildx-action action to v4.3.0 (b9c03d4)
+- chore(deps): update rust to v1.98.0 (f9c8c8a)
+- chore(deps): update taiki-e/install-action action to v2.87.0 (795a8fd)
+- chore(deps): update rust crate rstest to v0.27.0 (187ec46)
+- chore(deps): update rust to v1.98.1 (e10b7ae)
+- fix(deps): update rust crate clap to v4.6.7 (a20ac5d)
+- chore(deps): update docker/build-push-action action to v7.4.0 (72518e5)
+- chore(deps): update docker/setup-buildx-action action to v4.4.0 (abf2b1c)
+- fix(deps): update rust crate thiserror to v2.0.21 (5b71748)
+- chore(deps): update docker/setup-buildx-action action to v4.4.1 (0ce7e0d)
+- chore(deps): update rust to v1.99.0 (2b50e31)
+- chore(deps): update actions/download-artifact action to v8.0.2 (8673cc7)
+- chore(deps): update actions/upload-artifact action to v7.0.2 (ec4e5fa)
+- chore(deps): update apple-actions/import-codesign-certs digest to 77ba2a2 (a5101ac)
+- chore(deps): update rust crate indoc to v2.0.8 (f848657)
+- chore(deps): update actions/create-github-app-token action to v3.3.0 (83d3207)
+- chore(deps): update rust to v1.99.1 (78e3104)
+- chore(deps): update rust crate rstest to v0.28.0 (a29ae5c)
+- chore(deps): update swatinem/rust-cache digest to d1527c8 (f640489)
+- chore(deps): update docker/login-action action to v4.7.0 (e828f81)
+- fix(deps): update rust crate similar to v3.2.1 (a7e2417)
+- chore(deps): update taiki-e/install-action action to v2.88.0 (7a84744)
+
 ## 0.1.5 (2026-04-26)
 
 ### Fixes
