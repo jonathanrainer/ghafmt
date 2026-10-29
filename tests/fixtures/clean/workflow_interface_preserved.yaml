@@ -1,18 +1,18 @@
-name: Snake Case Workflow Call
+name: Workflow Interface Preserved
 
 on:
   workflow_call:
     inputs:
-      deploy_target:
+      deploy-target:
         type: string
-      log_level:
+      logLevel:
         type: string
     outputs:
-      app_url:
+      app-url:
         description: The URL
         value: ${{ jobs.deploy.outputs.app_url }}
     secrets:
-      api_key:
+      api-key:
         required: true
 
 jobs:
@@ -22,4 +22,4 @@ jobs:
       app_url: ${{ steps.deploy.outputs.url }}
     steps:
       - id: deploy
-        run: echo ${{ inputs.deploy_target }} ${{ inputs.log_level }}
+        run: echo ${{ inputs.deploy-target }} ${{ inputs.logLevel }}

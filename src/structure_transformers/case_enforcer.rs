@@ -21,6 +21,10 @@ const MATRIX_RESERVED: &[&str] = &["include", "exclude"];
 /// A transformer that will intelligently apply the rename function to all user-controlled sites,
 /// this allows it to enforce a particular casing standard throughout.
 ///
+/// Identifiers that form a workflow's or action's public interface (`workflow_call` and
+/// `workflow_dispatch` inputs, secrets and outputs) are never renamed, as callers outside
+/// the file refer to them by name.
+///
 /// N.B. This will not work for outputs that are set inside of steps, as they are very challenging
 /// to detect with 100% accuracy.
 pub(crate) struct CaseEnforcer {
@@ -88,26 +92,17 @@ enum RefKind {
     Job(RefRule),
     /// A step identifier (e.g. `steps/my_step/id`).
     Step(RefRule),
-    /// A workflow input identifier.
-    Input(RefRule),
-    /// A workflow or job output identifier.
+    /// A job output identifier.
     Output(RefRule),
     /// A matrix dimension key.
     Matrix(RefRule),
-    /// A workflow secret identifier.
-    Secret(RefRule),
 }
 
 impl RefKind {
     /// Extract the underlying [`RefRule`] for this variant.
     fn rule(&self) -> &RefRule {
         match self {
-            RefKind::Job(r)
-            | RefKind::Step(r)
-            | RefKind::Input(r)
-            | RefKind::Output(r)
-            | RefKind::Matrix(r)
-            | RefKind::Secret(r) => r,
+            RefKind::Job(r) | RefKind::Step(r) | RefKind::Output(r) | RefKind::Matrix(r) => r,
         }
     }
 }
@@ -247,10 +242,6 @@ impl CaseEnforcer {
             Regex::new(r"^/jobs/[^/]+/strategy/matrix/[^/]+$").unwrap(),
             Regex::new(r"^/jobs/[^/]+/strategy/matrix/(?:include|exclude)/[0-9]+/[^/]+$").unwrap(),
             Regex::new(r"^/jobs/[^/]+/services/[^/]+$").unwrap(),
-            Regex::new(r"^/on/workflow_dispatch/inputs/[^/]+$").unwrap(),
-            Regex::new(r"^/on/workflow_call/inputs/[^/]+$").unwrap(),
-            Regex::new(r"^/on/workflow_call/outputs/[^/]+$").unwrap(),
-            Regex::new(r"^/on/workflow_call/secrets/[^/]+$").unwrap(),
         ];
         let value_regexes = vec![
             Regex::new(r"^/jobs/[^/]+/steps/[0-9]+/id$").unwrap(),
@@ -269,11 +260,6 @@ impl CaseEnforcer {
                 pattern: Regex::new(&format!(r"steps\.({id})")).unwrap(),
                 replacement: "steps.{new}".into(),
             }),
-            RefKind::Input(RefRule {
-                classify: Regex::new(r"/inputs/[^/]+$").unwrap(),
-                pattern: Regex::new(&format!(r"inputs\.({id})")).unwrap(),
-                replacement: "inputs.{new}".into(),
-            }),
             RefKind::Output(RefRule {
                 // Only rewrite job-level outputs (needs.X.outputs / jobs.X.outputs),
                 // NOT step-level outputs (steps.X.outputs) — step output names are
@@ -286,11 +272,6 @@ impl CaseEnforcer {
                 classify: Regex::new(r"/strategy/matrix/").unwrap(),
                 pattern: Regex::new(&format!(r"matrix\.({id})")).unwrap(),
                 replacement: "matrix.{new}".into(),
-            }),
-            RefKind::Secret(RefRule {
-                classify: Regex::new(r"/secrets/[^/]+$").unwrap(),
-                pattern: Regex::new(&format!(r"secrets\.({id})")).unwrap(),
-                replacement: "secrets.{new}".into(),
             }),
         ];
 
@@ -481,20 +462,10 @@ mod tests {
         vec![rename("/jobs/build/steps/0/id", "myStep", "my_step")],
         "${{ steps.my_step.outputs.foo }}"
     )]
-    #[case::input_ref(
-        "${{ inputs.myInput }}",
-        vec![rename("/on/workflow_call/inputs/myInput", "myInput", "my_input")],
-        "${{ inputs.my_input }}"
-    )]
     #[case::matrix_ref(
         "${{ matrix.myVar }}",
         vec![rename("/jobs/build/strategy/matrix/myVar", "myVar", "my_var")],
         "${{ matrix.my_var }}"
-    )]
-    #[case::secret_ref(
-        "${{ secrets.mySecret }}",
-        vec![rename("/on/workflow_call/secrets/mySecret", "mySecret", "my_secret")],
-        "${{ secrets.my_secret }}"
     )]
     #[case::job_output_ref(
         "${{ needs.myJob.outputs.myOutput }}",
@@ -688,6 +659,64 @@ mod tests {
                 - if: steps.cache_thing.outputs.cache-hit != 'true'
                   name: Build something
                   run: echo \"cache miss, building\"
+        "}
+    )]
+    #[case::preserves_workflow_interface(
+        indoc! {"
+            on:
+              workflow_call:
+                inputs:
+                  fail-level:
+                    type: string
+                secrets:
+                  api-token:
+                    required: false
+                outputs:
+                  audit-findings:
+                    value: ${{ jobs.hex-audit.outputs.has-findings }}
+              workflow_dispatch:
+                inputs:
+                  logLevel:
+                    type: string
+            jobs:
+              hex-audit:
+                runs-on: ubuntu-latest
+                outputs:
+                  has-findings: ${{ steps.run-audit.outputs.found-issues }}
+                steps:
+                - id: run-audit
+                  run: echo hi
+                  env:
+                    LEVEL: ${{ inputs.fail-level }}
+                    TOKEN: ${{ secrets.api-token }}
+        "},
+        indoc! {"
+            on:
+              workflow_call:
+                inputs:
+                  fail-level:
+                    type: string
+                secrets:
+                  api-token:
+                    required: false
+                outputs:
+                  audit-findings:
+                    value: ${{ jobs.hex_audit.outputs.has_findings }}
+              workflow_dispatch:
+                inputs:
+                  logLevel:
+                    type: string
+            jobs:
+              hex_audit:
+                runs-on: ubuntu-latest
+                outputs:
+                  has_findings: ${{ steps.run_audit.outputs.found-issues }}
+                steps:
+                - id: run_audit
+                  run: echo hi
+                  env:
+                    LEVEL: ${{ inputs.fail-level }}
+                    TOKEN: ${{ secrets.api-token }}
         "}
     )]
     fn test_process(#[case] input: &str, #[case] expected: &str) {

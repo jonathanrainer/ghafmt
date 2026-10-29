@@ -3,13 +3,13 @@ name: Snake Case Enforcement
 on:
   workflow_dispatch:
     inputs:
-      deploy_target:
+      deploy-target:
         description: Where to deploy
         type: string
-      dry_run:
+      dry-run:
         type: boolean
         default: false
-      log_level:
+      logLevel:
         type: choice
         default: info
         options:
@@ -43,11 +43,11 @@ jobs:
 
   deploy:
     needs: build
-    if: ${{ inputs.dry_run == false }}
+    if: ${{ inputs.dry-run == false }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Deploy to ${{ inputs.deploy_target }}
+      - name: Deploy to ${{ inputs.deploy-target }}
         id: run_deploy
-        run: ./deploy.sh --target "${{ inputs.deploy_target }}" --log-level "${{ inputs.log_level }}"
+        run: ./deploy.sh --target "${{ inputs.deploy-target }}" --log-level "${{ inputs.logLevel }}"

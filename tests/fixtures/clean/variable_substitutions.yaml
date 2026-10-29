@@ -5,7 +5,7 @@ on:
     branches: [main]
   workflow_dispatch:
     inputs:
-      dry_run:
+      dry-run:
         type: boolean
         default: false
       environment:
@@ -14,7 +14,7 @@ on:
         options:
           - staging
           - production
-      log_level:
+      log-level:
         type: string
         default: info
 
@@ -52,11 +52,11 @@ jobs:
             -t myapp:${{ env.IMAGE_TAG }} .
 
       - name: Login to registry
-        if: ${{ !inputs.dry_run && github.event_name == 'workflow_dispatch' }}
+        if: ${{ !inputs.dry-run && github.event_name == 'workflow_dispatch' }}
         run: echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login -u "${{ secrets.REGISTRY_USER }}" --password-stdin
 
       - name: Push image
-        if: ${{ !inputs.dry_run }}
+        if: ${{ !inputs.dry-run }}
         run: |
           docker tag myapp:${{ env.IMAGE_TAG }} ${{ env.FULL_TAG }}
           docker push ${{ env.FULL_TAG }}
@@ -83,7 +83,7 @@ jobs:
             --env "${{ inputs.environment || 'staging' }}" \
             --version "${{ needs.setup.outputs.version }}" \
             --commit "${{ needs.setup.outputs.sha_short }}" \
-            --log-level "${{ inputs.log_level || 'info' }}"
+            --log-level "${{ inputs.log-level || 'info' }}"
           echo "app-url=https://${{ inputs.environment || 'staging' }}.example.com" >> "$GITHUB_OUTPUT"
         env:
           APP_VERSION: ${{ needs.setup.outputs.version }}

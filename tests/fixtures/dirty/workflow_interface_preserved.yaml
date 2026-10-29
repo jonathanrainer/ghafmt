@@ -1,4 +1,4 @@
-name: Snake Case Workflow Call
+name: Workflow Interface Preserved
 on:
   workflow_call:
     inputs:

@@ -16,8 +16,12 @@ noise.
 - Top-level workflow keys sorted (`name` → `on` → `env` → `jobs`)
 - Trigger events, `needs` arrays, `runs-on` arrays, and filter arrays sorted alphabetically
 - Blank lines inserted between top-level keys, jobs, and steps
-- Job IDs and step IDs converted to `snake_case`
+- Job IDs, step IDs and job-level outputs converted to `snake_case`, with references updated
+- `workflow_call` / `workflow_dispatch` inputs, secrets and outputs are left unchanged, as they are a workflow's public interface and callers refer to them by name
 - Keys within `with`, `env`, `permissions`, and similar maps sorted alphabetically
+
+> [!NOTE]
+> A job without a `name:` is reported to GitHub under its job ID, so renaming `check-pr` to `check_pr` changes the check name that branch protection rules match against. Add a `name:` to the job to keep the check name stable.
 
 **Action metadata formatting rules (`action.yml` / `action.yaml`):**
 
