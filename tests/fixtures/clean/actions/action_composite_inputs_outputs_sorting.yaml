@@ -7,6 +7,9 @@ inputs:
     description: An apple input
     type: string
     required: true
+  zulu:
+    description: A required input that sorts last alphabetically
+    required: true
   zebra:
     description: A zebra input
     required: false

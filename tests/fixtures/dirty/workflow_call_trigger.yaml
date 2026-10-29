@@ -6,6 +6,9 @@ on:
         type: string
         required: true
         description: Target environment
+      debug:
+        type: boolean
+        required: false
       version:
         description: Version to deploy
         required: false
@@ -16,6 +19,8 @@ on:
         value: ${{ jobs.deploy.outputs.url }}
         description: The deployed URL
     secrets:
+      API_KEY:
+        required: false
       DEPLOY_TOKEN:
         required: true
         description: Token for deployment

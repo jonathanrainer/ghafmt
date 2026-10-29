@@ -11,6 +11,10 @@ on:
           - dev
           - staging
           - production
+      build-number:
+        description: 'Build number'
+        type: string
+        required: false
       run-tests:
         description: 'Run tests first?'
         type: boolean

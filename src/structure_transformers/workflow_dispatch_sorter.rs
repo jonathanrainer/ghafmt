@@ -30,7 +30,11 @@ impl StructureTransformer for WorkflowDispatchSorter {
     fn process(&self, mut doc: Document) -> fyaml::Result<Document> {
         doc = self.sort_path_to_mapping_alphabetically(doc, "/on/workflow_dispatch")?;
         doc = for_each_mapping_child(doc, "/on/workflow_dispatch", |doc, child_path| {
-            self.sort_path_to_mapping_alphabetically(doc, child_path)
+            if child_path.ends_with("/inputs") {
+                self.sort_path_to_mapping_required_first(doc, child_path)
+            } else {
+                self.sort_path_to_mapping_alphabetically(doc, child_path)
+            }
         })?;
         for (key, key_order) in &self.order_map {
             doc = for_each_mapping_child(
@@ -85,6 +89,36 @@ mod tests {
                 inputs:
                   environment:
                     type: string
+                  version:
+                    type: string
+        "}.to_string()
+    )]
+    #[case::input_entries_required_first(
+        Document::from_string(indoc! {"
+            on:
+                workflow_dispatch:
+                    inputs:
+                        version:
+                            type: string
+                        environment:
+                            type: string
+                            required: true
+                        debug:
+                            type: boolean
+                        target:
+                            required: true
+        "}.to_string()).expect("test input is valid YAML"),
+        indoc! {"
+            on:
+              workflow_dispatch:
+                inputs:
+                  environment:
+                    type: string
+                    required: true
+                  target:
+                    required: true
+                  debug:
+                    type: boolean
                   version:
                     type: string
         "}.to_string()

@@ -137,6 +137,32 @@ pub(crate) trait StructureTransformer {
         }
         Ok(doc)
     }
+
+    /// Helper method to sort a mapping of entries (e.g. inputs or secrets) so that those with
+    /// `required: true` come first, each group then being sorted alphabetically.
+    ///
+    /// Returns the document gracefully if the path is not a mapping, and therefore cannot
+    /// be sorted
+    fn sort_path_to_mapping_required_first(
+        &self,
+        mut doc: Document,
+        path: &str,
+    ) -> fyaml::Result<Document> {
+        if doc.at_path(path).is_some_and(|a| a.is_mapping()) {
+            let is_required = |entry: fyaml::NodeRef| {
+                entry
+                    .map_get("required")
+                    .and_then(|r| r.scalar_str().ok().map(|s| s == "true"))
+                    .unwrap_or(false)
+            };
+            doc.edit().sort_mapping_at(path, |k1, v1, k2, v2| {
+                let key1 = k1.scalar_str().unwrap_or_default();
+                let key2 = k2.scalar_str().unwrap_or_default();
+                (!is_required(v1), key1).cmp(&(!is_required(v2), key2))
+            })?;
+        }
+        Ok(doc)
+    }
 }
 
 /// A further helper function that applies a closure to each of the children of a parent path
