@@ -1,5 +1,5 @@
 ---
-"ghafmt": patch
+default: patch
 ---
 
 Fix spurious blank lines in block-sequence `needs` lists
