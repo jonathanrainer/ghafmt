@@ -42,7 +42,11 @@ impl StructureTransformer for WorkflowCallSorter {
         doc = self.sort_mapping_at_path(doc, "/on/workflow_call", &self.workflow_key_order)?;
         // Then for each of the keys under 'workflow_call' sort their children alphabetically
         doc = for_each_mapping_child(doc, "/on/workflow_call", |doc, child_path| {
-            self.sort_path_to_mapping_alphabetically(doc, child_path)
+            if child_path.ends_with("/inputs") || child_path.ends_with("/secrets") {
+                self.sort_path_to_mapping_required_first(doc, child_path)
+            } else {
+                self.sort_path_to_mapping_alphabetically(doc, child_path)
+            }
         })?;
         // For a specific set of keys, defined in the order_map, re-order the keys to the order
         // specified in the order_map.
@@ -131,6 +135,48 @@ mod tests {
                     type: string
                   version:
                     type: string
+        "}.to_string()
+    )]
+    #[case::input_entries_required_first(
+        Document::from_string(indoc! {"
+            on:
+                workflow_call:
+                    inputs:
+                        version:
+                            type: string
+                        environment:
+                            type: string
+                            required: true
+        "}.to_string()).expect("test input is valid YAML"),
+        indoc! {"
+            on:
+              workflow_call:
+                inputs:
+                  environment:
+                    type: string
+                    required: true
+                  version:
+                    type: string
+        "}.to_string()
+    )]
+    #[case::secret_entries_required_first(
+        Document::from_string(indoc! {"
+            on:
+                workflow_call:
+                    secrets:
+                        another_token:
+                            required: false
+                        deploy_token:
+                            required: true
+        "}.to_string()).expect("test input is valid YAML"),
+        indoc! {"
+            on:
+              workflow_call:
+                secrets:
+                  deploy_token:
+                    required: true
+                  another_token:
+                    required: false
         "}.to_string()
     )]
     #[case::input_keys_sorted(

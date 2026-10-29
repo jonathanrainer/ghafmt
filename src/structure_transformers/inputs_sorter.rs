@@ -1,4 +1,4 @@
-//! Sorts `workflow_call` entries idiomatically and then alphabetically.
+//! Sorts `inputs` entries required-first then alphabetically, and their keys idiomatically.
 
 use fyaml::Document;
 
@@ -7,7 +7,7 @@ use crate::{
     structure_transformers::{StructureTransformer, for_each_mapping_child},
 };
 
-/// Sorts `workflow_call` entries idiomatically and then alphabetically.
+/// Sorts `inputs` entries required-first then alphabetically, and their keys idiomatically.
 pub(crate) struct InputsSorter {
     /// Pre-computed top-level key ordering to avoid allocating on every call.
     inputs_key_order: Vec<String>,
@@ -23,7 +23,7 @@ impl Default for InputsSorter {
 
 impl StructureTransformer for InputsSorter {
     fn process(&self, mut doc: Document) -> fyaml::Result<Document> {
-        doc = self.sort_path_to_mapping_alphabetically(doc, "/inputs")?;
+        doc = self.sort_path_to_mapping_required_first(doc, "/inputs")?;
         doc = for_each_mapping_child(doc, "/inputs", |doc, child_path| {
             self.sort_mapping_at_path(doc, child_path, &self.inputs_key_order)
         })?;
@@ -35,7 +35,7 @@ impl StructureTransformer for InputsSorter {
     }
 
     fn description(&self) -> &'static str {
-        "Sort 'inputs' entries first alphabetically, then idiomatically"
+        "Sort 'inputs' entries required-first then alphabetically, and their keys idiomatically"
     }
 }
 
@@ -111,6 +111,32 @@ mod tests {
               zebra:
                 description: A zebra input
                 required: false
+        "}.to_string()
+    )]
+    #[case::required_first_then_alphabetical(
+        Document::from_string(indoc! {"
+            inputs:
+                zebra:
+                    required: true
+                apple:
+                    required: false
+                mango:
+                    description: No required key
+                banana:
+                    required: true
+                cherry: {}
+        "}.to_string()).expect("test input is valid YAML"),
+        indoc! {"
+            inputs:
+              banana:
+                required: true
+              zebra:
+                required: true
+              apple:
+                required: false
+              cherry: {}
+              mango:
+                description: No required key
         "}.to_string()
     )]
     #[case::already_sorted(

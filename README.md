@@ -18,6 +18,7 @@ noise.
 - Blank lines inserted between top-level keys, jobs, and steps
 - Job IDs, step IDs and job-level outputs converted to `snake_case`, with references updated
 - `workflow_call` / `workflow_dispatch` inputs, secrets and outputs are left unchanged, as they are a workflow's public interface and callers refer to them by name
+- `workflow_call` inputs and secrets, and `workflow_dispatch` inputs, sorted with `required: true` entries first, then alphabetically within each group
 - Keys within `with`, `env`, `permissions`, and similar maps sorted alphabetically
 
 > [!NOTE]
@@ -26,7 +27,7 @@ noise.
 **Action metadata formatting rules (`action.yml` / `action.yaml`):**
 
 - Top-level keys sorted to canonical order: `name` → `description` → `author` → `inputs` → `outputs` → `runs` → `branding`
-- `inputs` and `outputs` sorted alphabetically; per-entry keys sorted idiomatically
+- `inputs` sorted with `required: true` entries first, then alphabetically within each group; `outputs` sorted alphabetically; per-entry keys sorted idiomatically
 - `runs` keys sorted by action type: composite (`using` → `steps`), JavaScript (`using` → `pre` → `pre-if` → `main` → `post` → `post-if`), Docker (`using` → `image` → `args` → `env` → `pre-entrypoint` → `entrypoint` → `post-entrypoint`)
 - Step keys and `with` maps inside composite action steps sorted alphabetically
 - Step IDs converted to `snake_case`

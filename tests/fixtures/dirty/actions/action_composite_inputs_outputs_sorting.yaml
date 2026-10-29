@@ -9,6 +9,9 @@ inputs:
     description: An apple input
     required: true
     type: string
+  zulu:
+    description: A required input that sorts last alphabetically
+    required: true
 outputs:
   zoo:
     value: ${{ steps.run.outputs.zoo }}

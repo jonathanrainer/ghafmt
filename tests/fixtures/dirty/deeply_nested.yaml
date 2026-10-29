@@ -2,6 +2,10 @@ name: Deeply Nested
 on:
   workflow_dispatch:
     inputs:
+      build-number:
+        description: 'Build number'
+        required: false
+        type: string
       deploy-env:
         description: 'Environment'
         required: true
