@@ -1,0 +1,5 @@
+# actionlint doesn't know the ubuntu-26.04 hosted runner label yet.
+# Remove once https://github.com/rhysd/actionlint/issues/682 is fixed.
+self-hosted-runner:
+  labels:
+    - ubuntu-26.04
