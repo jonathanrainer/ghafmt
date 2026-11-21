@@ -85,7 +85,6 @@ pub struct Ghafmt {}
 
 impl Ghafmt {
     /// Create a new `Ghafmt` instance with the default transformer pipeline.
-    #[must_use]
     pub fn run(
         &mut self,
         files: Vec<InputArg>,
