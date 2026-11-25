@@ -1,3 +1,42 @@
+## 0.2.1 (2026-11-25)
+
+### Fixes
+
+- update rust crate clap to v4.6.9 (#237) (f7f6b8c)
+- update rust crate clap to v4.6.10 (#239) (fccdfd5)
+
+### Project Infrastructure
+
+#### Fix Docker image build failing to find `stdatomic.h`
+
+Pass clang's resource dir to bindgen in the Dockerfile, as libclang can no
+longer locate its builtin headers in the musl-cross image now that `fyaml-sys`
+skips include path detection on Linux. (1d9aeff)
+
+### Dependencies
+
+- Update libz-sys, rustix and chacha20 to resolve cargo-deny advisories (dd43acd)
+- chore(deps): update dependency ubuntu to v26 (978ebac)
+- chore(deps): update ghcr.io/rust-cross/rust-musl-cross:amd64-musl docker digest to 3f1010e (1805183)
+- chore(deps): update ghcr.io/rust-cross/rust-musl-cross:arm64-musl docker digest to 02e7905 (a660174)
+- chore(deps): update taiki-e/install-action action to v2.89.0 (2fec4c7)
+- chore(deps): update taiki-e/install-action action to v2.90.0 (d5d1b23)
+- chore(deps): update docker/login-action action to v4.8.0 (4ab0c79)
+- chore(deps): update rust to v1.100.0 (dd43acd)
+- fix(deps): update rust crate clap to v4.6.8 (dd43acd)
+- fix(deps): update rust crate regex to v1.13.2 (dd43acd)
+- chore(deps): update actions/create-github-app-token action to v3.4.0 (dd43acd)
+- fix(deps): update rust crate walkdir to v2.5.1 (dd43acd)
+- fix(deps): update rust crate clap to v4.6.9 (f7f6b8c)
+- chore(deps): update rust crate rstest to v0.29.0 (18dc1b6)
+- fix(deps): update rust crate clap to v4.6.10 (fccdfd5)
+
+#### Fix build on Linux when multiple clang versions are installed
+
+Bump the `fyaml-sys` fork so bindgen no longer scrapes include paths from a
+`clang` binary that may differ from the libclang it loads. This broke the
+build on Ubuntu 26.04, which ships clang 20, 21 and 22. (040892a)
+
 ## 0.2.0 (2026-10-29)
 
 ### Features
